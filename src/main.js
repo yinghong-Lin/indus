@@ -9,9 +9,9 @@ import router from "./router"
 import "./style.css"
 
 // ✅ 开发环境启用 mock
-if (import.meta.env.DEV) {
-  import('./mock')
-}
+// if (import.meta.env.DEV) {
+//   import('./mock')
+// }
 
 const app = createApp(App)
 const pinia = createPinia()

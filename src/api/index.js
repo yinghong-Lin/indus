@@ -5,11 +5,11 @@ import { ElMessage } from "element-plus"
 // 获取API基础URL
 const getApiBaseUrl = () => {
   // 开发环境
-  if (import.meta.env.DEV) {
-    return import.meta.env.VITE_API_BASE_URL || "/api"
-  }
+  // if (import.meta.env.DEV) {
+  //   return import.meta.env.VITE_API_BASE_URL || "/api"
+  // }
   // 生产环境
-  return "/api"
+  return "http://127.0.0.1:8000/api"
 }
 
 // 创建axios实例

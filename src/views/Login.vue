@@ -14,7 +14,7 @@
       >
         <el-form-item prop="username">
           <el-input
-            v-model="loginForm.username"
+            v-model="loginForm.user_name"
             placeholder="用户名"
             size="large"
             prefix-icon="User"
@@ -61,12 +61,12 @@ const authStore = useAuthStore()
 const loginFormRef = ref()
 
 const loginForm = reactive({
-  username: 'admin',
-  password: 'admin123'
+  user_name: '',
+  password: ''
 })
 
 const loginRules = {
-  username: [
+  user_name: [
     { required: true, message: '请输入用户名', trigger: 'blur' }
   ],
   password: [
@@ -82,15 +82,19 @@ const handleLogin = async () => {
     if (valid) {
       try {
         const response = await userAPI.login(loginForm) // ✅ 使用 userAPI.login
-        const { user, token, refreshToken } = response
+        // const { user, token, refreshToken } = response
+        const user = response.data.user
+        const access_token = response.data.access_token
+        const refresh_token = response.data.refresh_token
 
         // ✅ 手动设置 token 和用户信息到 authStore
         authStore.user = user
-        authStore.token = token
-        authStore.refreshToken = refreshToken
+        authStore.token = access_token
+        authStore.refreshToken = refresh_token
 
-        localStorage.setItem('token', token)
-        localStorage.setItem('refreshToken', refreshToken)
+        localStorage.setItem('userInfo', user)
+        localStorage.setItem('access_token', access_token)
+        localStorage.setItem('refresh_token', refresh_token)
 
         ElMessage.success('登录成功')
         router.push('/')

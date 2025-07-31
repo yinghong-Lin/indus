@@ -1,257 +1,480 @@
-import Mock from "mockjs"
+import Mock from "mockjs";
 
-// 设备类型映射
+// 修正设备类型映射，使用接口文档中的正确类型名称
 const equipmentTypes = {
-  IM: "注塑机",
-  PT: "喷漆机",
-  SS: "丝印机",
-  HS: "烫金机",
-}
+  injection_molding: "注塑机",
+  screen_printing: "丝印机",
+  hot_stamping: "烫金机",
+  spray_painting: "喷漆机",
+};
 
-// 设备状态
-const equipmentStatuses = ["运行中", "维修中", "故障", "停机"]
+// 设备状态映射
+const equipmentStatuses = ["RUN", "OFF", "ERROR", "MAINTAIN"];
+
+// 生成注塑机设置参数
+const generateInjectionMoldingSettings = () => ({
+  setting_heating_temp: { value: Mock.Random.natural(180, 280), unit: "℃" },
+  setting_cooling_time: { value: Mock.Random.natural(10, 30), unit: "s" },
+  setting_injection_speed: { value: Mock.Random.natural(60, 120), unit: "mm/s" },
+  setting_injection_pressure: { value: Mock.Random.float(80, 150, 1, 1), unit: "MPa" },
+  setting_injection_time: { value: Mock.Random.natural(2, 5), unit: "s" },
+  setting_opening_time: { value: Mock.Random.natural(1, 3), unit: "s" },
+  setting_closing_time: { value: Mock.Random.natural(1, 2), unit: "s" },
+  setting_holding_pressure: { value: Mock.Random.float(60, 100, 1, 1), unit: "MPa" },
+  setting_holding_time: { value: Mock.Random.natural(3, 8), unit: "s" },
+  setting_injection_position: { value: Mock.Random.float(0.01, 0.1, 2, 2), unit: "mm" },
+  setting_screw_speed: { value: Mock.Random.natural(80, 200), unit: "rpm" },
+});
+
+// 生成注塑机规格参数
+const generateInjectionMoldingSpecs = () => ({
+  spec_opening_stroke: { min: 0, max: 200, unit: "mm" },
+  spec_clamping_force: { min: 0, max: 1200, unit: "kN" },
+  spec_motor_power: { min: 0, max: 15.5, unit: "kW" },
+  spec_heating_zone_count: { min: 0, max: 8, unit: "个" },
+  spec_heating_temp: { min: 180, max: 280, unit: "℃" },
+  spec_injection_speed: { min: 0, max: 200, unit: "mm/s" },
+  spec_injection_pressure: { min: 0, max: 180.0, unit: "MPa" },
+  spec_screw_speed: { min: 0, max: 300, unit: "rpm" },
+  spec_holding_pressure: { min: 0, max: 120.0, unit: "MPa" },
+});
+
+// 生成丝印机设置参数
+const generateScreenPrintingSettings = () => ({
+  setting_printing_pressure: { value: Mock.Random.float(0.3, 0.7, 1, 1), unit: "MPa" },
+  setting_printing_speed: { value: Mock.Random.float(0.5, 1.0, 1, 1), unit: "m/s" },
+  setting_ink_viscosity: { value: Mock.Random.float(8, 14, 1, 1), unit: "Pa·s" },
+  setting_ink_drying_time: { value: Mock.Random.natural(20, 60), unit: "s" },
+});
+
+// 生成丝印机规格参数
+const generateScreenPrintingSpecs = () => ({
+  spec_printing_pressure: { min: 0, max: 0.8, unit: "MPa" },
+  spec_printing_speed: { min: 0, max: 1.2, unit: "m/s" },
+  spec_mesh_count: { min: 0, max: 300, unit: "目" },
+  spec_template_thickness: { min: 0, max: 0.3, unit: "mm" },
+  spec_ink_viscosity: { min: 0, max: 15.0, unit: "Pa·s" },
+  spec_uv_drying_power: { min: 0, max: 2000, unit: "W" },
+});
+
+// 生成烫金机设置参数
+const generateHotStampingSettings = () => ({
+  setting_stamping_temp: { value: Mock.Random.natural(80, 150), unit: "℃" },
+  setting_stamping_pressure: { value: Mock.Random.float(0.5, 2.0, 1, 1), unit: "MPa" },
+  setting_stamping_time: { value: Mock.Random.float(0.3, 2.0, 1, 1), unit: "s" },
+  setting_foil_speed: { value: Mock.Random.float(1.5, 5.0, 1, 1), unit: "m/s" },
+});
+
+// 生成烫金机规格参数
+const generateHotStampingSpecs = () => ({
+  spec_stamping_temp: { min: 0, max: 200, unit: "℃" },
+  spec_stamping_pressure: { min: 0, max: 2.5, unit: "MPa" },
+  spec_foil_speed_min: { min: 1, max: 10, unit: "m/s" },
+  spec_foil_speed_max: { min: 1, max: 10, unit: "m/s" },
+  spec_stamping_duration: { min: 0, max: 5, unit: "s" },
+});
+
+// 生成喷漆机设置参数
+const generateSprayPaintingSettings = () => ({
+  setting_paint_viscosity: { value: Mock.Random.float(10, 20, 1, 1), unit: "Pa·s" },
+  setting_spray_pressure: { value: Mock.Random.float(0.3, 0.5, 1, 1), unit: "MPa" },
+  setting_spray_distance: { value: Mock.Random.natural(180, 250), unit: "mm" },
+  setting_spray_speed: { value: Mock.Random.float(0.8, 1.3, 1, 1), unit: "m/s" },
+  setting_drying_temp: { value: Mock.Random.natural(50, 75), unit: "℃" },
+  setting_drying_time: { value: Mock.Random.natural(15, 40), unit: "s" },
+});
+
+// 生成喷漆机规格参数
+const generateSprayPaintingSpecs = () => ({
+  spec_spray_pressure: { min: 0, max: 0.6, unit: "MPa" },
+  spec_spray_distance_min: { min: 150, max: 300, unit: "mm" },
+  spec_spray_distance_max: { min: 150, max: 300, unit: "mm" },
+  spec_spray_speed: { min: 0, max: 1.5, unit: "m/s" },
+  spec_drying_temp: { min: 0, max: 80, unit: "℃" },
+  spec_paint_viscosity: { min: 0, max: 25.0, unit: "Pa·s" },
+});
+
+// 根据设备类型生成设置参数
+const generateSettingDetails = (type) => {
+  switch (type) {
+    case "injection_molding":
+      return generateInjectionMoldingSettings();
+    case "screen_printing":
+      return generateScreenPrintingSettings();
+    case "hot_stamping":
+      return generateHotStampingSettings();
+    case "spray_painting":
+      return generateSprayPaintingSettings();
+    default:
+      return {};
+  }
+};
+
+// 根据设备类型生成规格参数
+const generateSpecDetails = (type) => {
+  switch (type) {
+    case "injection_molding":
+      return generateInjectionMoldingSpecs();
+    case "screen_printing":
+      return generateScreenPrintingSpecs();
+    case "hot_stamping":
+      return generateHotStampingSpecs();
+    case "spray_painting":
+      return generateSprayPaintingSpecs();
+    default:
+      return {};
+  }
+};
 
 // 生成设备数据
-const generateEquipment = () => {
-  const equipment = []
-  const types = ["IM", "PT", "SS", "HS"]
+const generateEquipmentData = () => {
+  const equipment = [];
+  const types = Object.keys(equipmentTypes);
+  const locations = ["生产区域A", "生产区域B", "生产区域C", "生产区域D"];
 
-  types.forEach((type) => {
-    for (let i = 1; i <= 3; i++) {
-      const id = `${type}${String(i).padStart(3, "0")}`
-      equipment.push({
-        equipment_id: id,
-        equipment_name: `${equipmentTypes[type]}${i}号`,
-        equipment_type: equipmentTypes[type],
-        equipment_status: Mock.Random.pick(equipmentStatuses),
-        location: `${equipmentTypes[type]}车间${String.fromCharCode(64 + i)}-${String(i).padStart(2, "0")}`,
-        manufacturer: Mock.Random.pick(["海天国际", "震雄集团", "伊之密", "博创智能", "力劲科技"]),
-        model: Mock.Random.string("upper", 3, 5) + Mock.Random.natural(100, 999),
-        purchase_date: Mock.Random.date("yyyy-MM-dd"),
-        warranty_date: Mock.Random.date("yyyy-MM-dd"),
-        spec: generateEquipmentSpec(type),
-        parameters: generateEquipmentParameters(type),
-        realtime: generateRealtimeData(type),
-      })
-    }
-  })
+  for (let i = 0; i < 50; i++) {
+    const type = Mock.Random.pick(types);
+    const status = Mock.Random.pick(equipmentStatuses);
+    const id = Mock.Random.guid();
 
-  return equipment
-}
-
-// 生成设备规格
-const generateEquipmentSpec = (type) => {
-  switch (type) {
-    case "IM":
-      return {
-        max_clamping_force: Mock.Random.natural(1200, 2000),
-        injection_volume: Mock.Random.natural(300, 600),
-        heating_power: Mock.Random.natural(10, 20),
-        max_injection_pressure: Mock.Random.natural(150, 250),
-        screw_diameter: Mock.Random.natural(35, 55),
-        shot_weight: Mock.Random.natural(200, 500),
-      }
-    case "PT":
-      return {
-        max_spray_pressure: Mock.Random.float(0.5, 1.0, 1, 1),
-        spray_width: Mock.Random.natural(200, 400),
-        drying_power: Mock.Random.natural(5, 12),
-        paint_capacity: Mock.Random.natural(50, 100),
-        booth_size: `${Mock.Random.natural(3, 6)}x${Mock.Random.natural(3, 6)}x${Mock.Random.natural(3, 4)}`,
-      }
-    case "SS":
-      return {
-        max_printing_pressure: Mock.Random.float(0.8, 1.5, 1, 1),
-        printing_area: `${Mock.Random.natural(150, 250)}x${Mock.Random.natural(200, 350)}`,
-        max_speed: Mock.Random.natural(40, 80),
-        ink_capacity: Mock.Random.natural(20, 50),
-        screen_size: `${Mock.Random.natural(300, 500)}x${Mock.Random.natural(400, 600)}`,
-      }
-    case "HS":
-      return {
-        max_stamping_temp: Mock.Random.natural(180, 250),
-        max_pressure: Mock.Random.natural(2000, 4000),
-        stamping_area: `${Mock.Random.natural(100, 200)}x${Mock.Random.natural(150, 250)}`,
-        foil_width: Mock.Random.natural(100, 300),
-        heating_time: Mock.Random.natural(30, 120),
-      }
-    default:
-      return {}
-  }
-}
-
-// 生成设备参数
-const generateEquipmentParameters = (type) => {
-  switch (type) {
-    case "IM":
-      return {
-        heating_temp_range: `${Mock.Random.natural(180, 200)}-${Mock.Random.natural(220, 250)}℃`,
-        injection_pressure: Mock.Random.natural(100, 150),
-        injection_speed: Mock.Random.natural(60, 100),
-        screw_speed: Mock.Random.natural(80, 150),
-        holding_pressure: Mock.Random.float(60, 100, 1, 1),
-        cooling_time: Mock.Random.natural(10, 30),
-      }
-    case "PT":
-      return {
-        spray_pressure: Mock.Random.float(0.3, 0.7, 1, 2),
-        spray_distance: Mock.Random.natural(150, 250),
-        spray_speed: Mock.Random.float(0.8, 1.5, 1, 1),
-        drying_temp: Mock.Random.natural(60, 80),
-        paint_flow_rate: Mock.Random.float(100, 300, 1, 1),
-        atomization_pressure: Mock.Random.float(2, 5, 1, 1),
-      }
-    case "SS":
-      return {
-        printing_pressure: Mock.Random.float(0.4, 0.8, 1, 2),
-        printing_speed: Mock.Random.float(0.6, 1.2, 1, 1),
-        ink_viscosity: Mock.Random.float(10, 16, 1, 1),
-        ink_drying_time: Mock.Random.natural(20, 40),
-        squeegee_angle: Mock.Random.natural(45, 75),
-        off_contact: Mock.Random.float(1, 3, 1, 1),
-      }
-    case "HS":
-      return {
-        stamping_temp_range: `${Mock.Random.natural(150, 170)}-${Mock.Random.natural(180, 200)}℃`,
-        stamping_pressure_range: `${Mock.Random.float(1.2, 1.8, 1, 1)}-${Mock.Random.float(1.8, 2.5, 1, 1)}MPa`,
-        stamping_time_range: `${Mock.Random.float(0.8, 1.2, 1, 1)}-${Mock.Random.float(1.5, 2.5, 1, 1)}s`,
-        foil_speed_range: `${Mock.Random.natural(3, 5)}-${Mock.Random.natural(6, 8)}m/min`,
-        heating_time: Mock.Random.natural(60, 180),
-        cooling_time: Mock.Random.natural(30, 90),
-      }
-    default:
-      return {}
-  }
-}
-
-// 生成实时数据
-const generateRealtimeData = (type) => {
-  const baseData = {
-    collection_time: Mock.Random.datetime("yyyy-MM-dd HH:mm:ss"),
-    status: Mock.Random.pick(["running", "warning", "stopped", "maintenance"]),
+    equipment.push({
+      equipment_id: id,
+      equipment_name: `${equipmentTypes[type]}${Mock.Random.natural(1, 20)}号`,
+      equipment_type: type,
+      equipment_status: status,
+      location: Mock.Random.pick(locations),
+      setting_details: generateSettingDetails(type),
+      spec_details: generateSpecDetails(type),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
   }
 
-  switch (type) {
-    case "IM":
-      return {
-        ...baseData,
-        heating_temp_range: `${Mock.Random.natural(180, 200)}-${Mock.Random.natural(210, 230)}℃`,
-        injection_pressure: Mock.Random.float(100, 130, 1, 1),
-        injection_speed: Mock.Random.natural(70, 90),
-        screw_speed: Mock.Random.natural(100, 130),
-        efficiency: Mock.Random.natural(80, 95),
-        cycle_time: Mock.Random.natural(45, 120),
-        shot_count: Mock.Random.natural(1000, 5000),
-      }
-    case "PT":
-      return {
-        ...baseData,
-        spray_pressure: Mock.Random.float(0.4, 0.6, 1, 2),
-        spray_distance: Mock.Random.natural(180, 220),
-        spray_speed: Mock.Random.float(1.0, 1.3, 1, 1),
-        drying_temp: Mock.Random.natural(65, 75),
-        efficiency: Mock.Random.natural(80, 95),
-        paint_consumption: Mock.Random.float(50, 150, 1, 1),
-        booth_humidity: Mock.Random.natural(40, 60),
-      }
-    case "SS":
-      return {
-        ...baseData,
-        printing_pressure: Mock.Random.float(0.5, 0.7, 1, 2),
-        printing_speed: Mock.Random.float(0.8, 1.1, 1, 1),
-        ink_viscosity: Mock.Random.float(11, 14, 1, 1),
-        ink_drying_time: Mock.Random.natural(25, 35),
-        efficiency: Mock.Random.natural(80, 95),
-        print_count: Mock.Random.natural(500, 2000),
-        registration_accuracy: Mock.Random.float(0.05, 0.15, 2, 2),
-      }
-    case "HS":
-      return {
-        ...baseData,
-        stamping_temp: Mock.Random.natural(160, 180),
-        stamping_pressure: Mock.Random.float(1.5, 2.0, 1, 1),
-        stamping_time: Mock.Random.float(1.0, 1.8, 1, 1),
-        foil_speed: Mock.Random.float(4.5, 6.5, 1, 1),
-        efficiency: Mock.Random.natural(80, 95),
-        foil_consumption: Mock.Random.float(10, 30, 1, 1),
-        stamping_count: Mock.Random.natural(800, 3000),
-      }
-    default:
-      return baseData
-  }
-}
+  return equipment;
+};
 
-// 初始化设备数据
-const equipmentData = generateEquipment()
+const equipmentData = generateEquipmentData();
 
-// 设备列表接口
-Mock.mock(/\/equipment\/list/, "get", (options) => {
-  const url = new URL("http://localhost" + options.url)
-  const page = Number.parseInt(url.searchParams.get("page")) || 1
-  const page_size = Number.parseInt(url.searchParams.get("page_size")) || 20
+// 获取设备列表接口
+Mock.mock(/\/productionControl\/getEquipmentList/, "get", ({ url }) => {
+  const u = new URL("http://localhost" + url);
+  const page = Number(u.searchParams.get("page") || 1);
+  const page_size = Number(u.searchParams.get("page_size") || 10);
 
-  const total = equipmentData.length
-  const start = (page - 1) * page_size
-  const end = start + page_size
-  const list = equipmentData.slice(start, end)
+  const start = (page - 1) * page_size;
+  const end = start + page_size;
+  const list = equipmentData.slice(start, end);
 
   return {
     code: 200,
-    message: "success",
+    msg: "获取设备列表成功",
     data: {
-      list,
-      total,
-      page,
-      page_size,
-      total_pages: Math.ceil(total / page_size),
-    },
-  }
-})
-
-// 获取设备规格接口
-Mock.mock("/equipment/spec", "post", (options) => {
-  const { equipment_name } = JSON.parse(options.body)
-  const equipment = equipmentData.find((item) => item.equipment_name === equipment_name)
-
-  if (equipment) {
-    return {
-      code: 200,
-      message: "success",
-      data: {
-        equipment_name: equipment.equipment_name,
-        equipment_type: equipment.equipment_type,
-        spec: equipment.spec,
-        manufacturer: equipment.manufacturer,
-        model: equipment.model,
+      equipments: list,
+      pagination: {
+        total: equipmentData.length,
+        page,
+        page_size,
+        total_pages: Math.ceil(equipmentData.length / page_size),
       },
-    }
-  } else {
-    return {
-      code: 404,
-      message: "设备不存在",
-      data: null,
-    }
-  }
-})
+    },
+  };
+});
 
-// 查询设备详情接口
-Mock.mock("/equipment/detail", "post", (options) => {
-  const { equipment_name } = JSON.parse(options.body)
-  const equipment = equipmentData.find((item) => item.equipment_name === equipment_name)
+// 根据id获取设备信息
+Mock.mock(/\/productionControl\/getEquipmentById/, "get", ({ url }) => {
+  const u = new URL("http://localhost" + url);
+  const equipment_id = u.searchParams.get("equipment_id");
+
+  const equipment = equipmentData.find((item) => item.equipment_id === equipment_id);
 
   if (equipment) {
     return {
       code: 200,
-      message: "success",
+      msg: "获取成功",
       data: equipment,
-    }
+    };
   } else {
     return {
       code: 404,
-      message: "设备不存在",
+      msg: "设备不存在",
       data: null,
-    }
+    };
   }
-})
+});
 
-export default {}
+// 新增设备接口
+Mock.mock(/\/api\/productionControl\/addEquipment/, "post", ({ body }) => {
+  try {
+    const data = JSON.parse(body);
+
+    // 验证必填字段
+    if (!data.equipment_name || !data.equipment_type || !data.location) {
+      return {
+        code: 400,
+        msg: "缺少必填字段：设备名称、设备类型、设备位置",
+        data: null,
+      };
+    }
+
+    // 确保有完整的默认参数
+    if (!data.setting_details || Object.keys(data.setting_details).length === 0) {
+      data.setting_details = generateSettingDetails(data.equipment_type);
+    }
+    if (!data.spec_details || Object.keys(data.spec_details).length === 0) {
+      data.spec_details = generateSpecDetails(data.equipment_type);
+    }
+
+    const newEquipment = {
+      equipment_id: Mock.Random.guid(),
+      equipment_status: "OFF",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...data,
+    };
+
+    equipmentData.unshift(newEquipment);
+
+    return {
+      code: 200,
+      msg: "新增设备成功",
+      data: newEquipment,
+    };
+  } catch (error) {
+    return {
+      code: 500,
+      msg: "服务器内部错误：" + error.message,
+      data: null,
+    };
+  }
+});
+
+// 删除设备接口
+Mock.mock(/\/api\/productionControl\/deleteEquipment/, "delete", ({ url }) => {
+  const u = new URL("http://localhost" + url);
+  const equipment_id = u.searchParams.get("equipment_id");
+
+  const index = equipmentData.findIndex((item) => item.equipment_id === equipment_id);
+
+  if (index > -1) {
+    const deletedEquipment = equipmentData.splice(index, 1)[0];
+    return {
+      code: 200,
+      msg: `删除设备"${deletedEquipment.equipment_name}"成功`,
+      data: null,
+    };
+  } else {
+    return {
+      code: 404,
+      msg: "设备不存在",
+      data: null,
+    };
+  }
+});
+
+// 更新设备接口
+Mock.mock("/productionControl/updateEquipment", "put", ({ body }) => {
+  try {
+    const data = JSON.parse(body);
+
+    if (!data.equipment_id) {
+      return {
+        code: 400,
+        msg: "缺少设备ID",
+        data: null,
+      };
+    }
+
+    const index = equipmentData.findIndex((item) => item.equipment_id === data.equipment_id);
+
+    if (index > -1) {
+      // 保留原有的创建时间，只更新修改时间
+      const originalCreatedAt = equipmentData[index].created_at;
+      equipmentData[index] = {
+        ...equipmentData[index],
+        ...data,
+        created_at: originalCreatedAt,
+        updated_at: new Date().toISOString(),
+      };
+
+      return {
+        code: 200,
+        msg: "更新设备成功",
+        data: equipmentData[index],
+      };
+    } else {
+      return {
+        code: 404,
+        msg: "设备不存在",
+        data: null,
+      };
+    }
+  } catch (error) {
+    return {
+      code: 500,
+      msg: "服务器内部错误：" + error.message,
+      data: null,
+    };
+  }
+});
+
+// 更新设备状态接口
+Mock.mock(/\/api\/productionControl\/updateEquipmentRunStatus/, "patch", ({ url }) => {
+  const u = new URL("http://localhost" + url);
+  const equipment_id = u.searchParams.get("equipment_id");
+  const status = u.searchParams.get("status");
+
+  if (!equipment_id || !status) {
+    return {
+      code: 400,
+      msg: "缺少必要参数：设备ID或状态",
+      data: null,
+    };
+  }
+
+  const equipment = equipmentData.find((item) => item.equipment_id === equipment_id);
+
+  if (equipment) {
+    equipment.equipment_status = status;
+    equipment.updated_at = new Date().toISOString();
+
+    return {
+      code: 200,
+      msg: `已更新设备'${equipment.equipment_name}'运行状态为'${status}'`,
+      data: equipment,
+    };
+  } else {
+    return {
+      code: 404,
+      msg: "设备不存在",
+      data: null,
+    };
+  }
+});
+
+// 更新设备规格接口
+Mock.mock(/\/api\/productionControl\/updateEquipmentSpec/, "patch", ({ url, body }) => {
+  try {
+    const u = new URL("http://localhost" + url);
+    const equipment_id = u.searchParams.get("equipment_id");
+    const data = JSON.parse(body);
+
+    if (!equipment_id) {
+      return {
+        code: 400,
+        msg: "缺少设备ID",
+        data: null,
+      };
+    }
+
+    const equipment = equipmentData.find((item) => item.equipment_id === equipment_id);
+
+    if (equipment) {
+      equipment.spec_details = { ...equipment.spec_details, ...data.spec_details };
+      equipment.updated_at = new Date().toISOString();
+
+      return {
+        code: 200,
+        msg: `已更新设备'${equipment.equipment_name}'的规格`,
+        data: equipment,
+      };
+    } else {
+      return {
+        code: 404,
+        msg: "设备不存在",
+        data: null,
+      };
+    }
+  } catch (error) {
+    return {
+      code: 500,
+      msg: "服务器内部错误：" + error.message,
+      data: null,
+    };
+  }
+});
+
+// 更新设备设置参数接口
+Mock.mock(/\/api\/productionControl\/updateEquipmentSetting/, "patch", ({ url, body }) => {
+  try {
+    const u = new URL("http://localhost" + url);
+    const equipment_id = u.searchParams.get("equipment_id");
+    const data = JSON.parse(body);
+
+    if (!equipment_id) {
+      return {
+        code: 400,
+        msg: "缺少设备ID",
+        data: null,
+      };
+    }
+
+    const equipment = equipmentData.find((item) => item.equipment_id === equipment_id);
+
+    if (equipment) {
+      equipment.setting_details = { ...equipment.setting_details, ...data.setting_details };
+      equipment.updated_at = new Date().toISOString();
+
+      return {
+        code: 200,
+        msg: `已更新设备'${equipment.equipment_name}'的设置`,
+        data: equipment,
+      };
+    } else {
+      return {
+        code: 404,
+        msg: "设备不存在",
+        data: null,
+      };
+    }
+  } catch (error) {
+    return {
+      code: 500,
+      msg: "服务器内部错误：" + error.message,
+      data: null,
+    };
+  }
+});
+
+// 搜索框设备接口
+Mock.mock(/\/api\/productionControl\/searchEquipment/, "get", ({ url }) => {
+  const u = new URL("http://localhost" + url);
+  const page = Number(u.searchParams.get("page") || 1);
+  const page_size = Number(u.searchParams.get("page_size") || 10);
+  const keyword = u.searchParams.get("keyword") || "";
+  const equipment_type = u.searchParams.get("equipment_type") || "all";
+
+  let filteredData = [...equipmentData];
+
+  // 按类型筛选
+  if (equipment_type !== "all") {
+    filteredData = filteredData.filter((item) => item.equipment_type === equipment_type);
+  }
+
+  // 按关键词搜索
+  if (keyword) {
+    filteredData = filteredData.filter(
+      (item) =>
+        item.equipment_name.includes(keyword) || item.location.includes(keyword),
+    );
+  }
+
+  const start = (page - 1) * page_size;
+  const end = start + page_size;
+  const list = filteredData.slice(start, end);
+
+  return {
+    code: 200,
+    msg: "搜索成功",
+    data: {
+      equipments: list,
+      pagination: {
+        total: filteredData.length,
+        page,
+        page_size,
+        total_pages: Math.ceil(filteredData.length / page_size),
+      },
+    },
+  };
+});
+
+console.log("[Mock] 生产控制设备接口已启动！");

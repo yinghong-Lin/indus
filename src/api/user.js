@@ -16,10 +16,6 @@ export const userAPI = {
     return request.post("/user/refresh", { refreshToken })
   },
 
-  // 获取当前用户信息
-  getCurrentUser() {
-    return request.get("/user/me")
-  },
 
   // 添加用户
   addUser(userData) {

@@ -141,6 +141,7 @@ const isCollapsed = ref(false)
 const notificationDrawer = ref(false)
 const userAvatar = ref('')
 
+//通知中心数据模拟
 const notifications = reactive([
   {
     id: 1,
@@ -204,7 +205,7 @@ const logout = async () => {
 
 onMounted(() => {
   // 获取当前用户信息
-  authStore.getCurrentUser()
+  // authStore.getCurrentUser()
 })
 </script>
 

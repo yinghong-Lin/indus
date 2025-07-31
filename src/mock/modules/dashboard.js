@@ -1,51 +1,75 @@
 import Mock from 'mockjs'
 
-/* 1. 设备列表 */
-Mock.mock('/api/devices', 'get', {
+/* ------------------ 常量 ------------------ */
+const equipmentTypes = {
+  IM: '注塑机',
+  PT: '喷漆机',
+  SS: '丝印机',
+  HS: '烫金机',
+}
+
+const equipmentStatuses = ['运行中', '维修中', '故障', '停机']
+const alarmLevels = ['致命', '严重', '警告', '提示']
+
+/* ------------------ 生成器 ------------------ */
+const generateDashboardDevices = () => {
+  const devices = []
+  const types = Object.keys(equipmentTypes)
+
+  types.forEach((type) => {
+    for (let i = 1; i <= 3; i++) {
+      const id = `${type}${String(i).padStart(3, '0')}`
+      devices.push({
+        equipment_id: id,
+        equipment_name: `${equipmentTypes[type]}${i}号`,
+        equipment_type: equipmentTypes[type],
+        equipment_status: Mock.Random.pick(equipmentStatuses),
+        location: `${equipmentTypes[type]}车间${String.fromCharCode(64 + i)}-${String(i).padStart(2, '0')}`,
+      })
+    }
+  })
+  return devices
+}
+
+const generateAlarms = () =>
+  Array.from({ length: 20 }, () => ({
+    alarm_id: Mock.Random.id(),
+    alarm_code: Mock.Random.string('upper', 4, 6),
+    alarm_detail: Mock.Random.csentence(5, 10),
+    alarm_level: Mock.Random.pick(alarmLevels),
+    alarm_time: Mock.Random.datetime('yyyy-MM-dd HH:mm:ss'),
+  }))
+
+const generateRealtimeData = () =>
+  Array.from({ length: 60 }, (_, i) => [
+    new Date(Date.now() - (59 - i) * 60 * 1000),
+    Mock.Random.integer(10, 100),
+  ])
+
+/* ------------------ mock 数据 ------------------ */
+const dashboardDevices = generateDashboardDevices()
+const dashboardAlarms = generateAlarms()
+
+/* ------------------ 接口拦截 ------------------ */
+// 1. 设备列表
+Mock.mock('/api/dashboard/devices', 'get', () => ({
   code: 200,
-  data: [
-    { equipment_id: 1, equipment_name: '注塑机-1#', equipment_type: 'injection', equipment_status: 'normal', location: '注塑车间-A' },
-    { equipment_id: 2, equipment_name: '注塑机-2#', equipment_type: 'injection', equipment_status: 'fault',   location: '注塑车间-A' },
-    { equipment_id: 3, equipment_name: '丝印机-1#', equipment_type: 'screen',    equipment_status: 'normal',  location: '丝印车间-B' },
-    { equipment_id: 4, equipment_name: '丝印机-2#', equipment_type: 'screen',    equipment_status: 'repair',  location: '丝印车间-B' },
-    { equipment_id: 5, equipment_name: '喷漆机-1#', equipment_type: 'spray',     equipment_status: 'normal',  location: '喷漆车间-C' },
-    { equipment_id: 6, equipment_name: '烫金机-1#', equipment_type: 'hot',       equipment_status: 'normal',  location: '烫金车间-D' }
-  ]
-})
+  message: 'success',
+  data: dashboardDevices,
+}))
 
-/* 2. 报警列表 */
-Mock.mock('/api/alarms', 'get', {
+// 2. 报警列表（最近 20 条）
+Mock.mock('/api/dashboard/alarms', 'get', () => ({
   code: 200,
-  'data|10-15': [{
-    alarm_code: '@upper(@word(3,5))',
-    alarm_detail: '@sentence(3,5)',
-    alarm_level: '@pick(["警告","严重","致命"])',
-    alarm_time: '@datetime'
-  }]
-})
+  message: 'success',
+  data: dashboardAlarms,
+}))
 
-/* 3. 实时趋势（支持任何 type 与 id） */
-Mock.mock(/\/api\/trend\/\w+\/\d+/, 'get', options => {
-  // 解析路径参数
-  const [, type, id] = options.url.match(/\/api\/trend\/(\w+)\/(\d+)/)
-  // 生成 60 个点，1 分钟间隔
-  const points = []
-  for (let i = 60; i >= 0; i--) {
-    // 根据设备类型给不同基线
-    const base = type === 'injection' ? 200
-               : type === 'screen'    ? 80
-               : type === 'spray'     ? 0.5
-               : 180
-    points.push([
-      new Date(Date.now() - i * 60_000),
-      +(base + (Math.random() - 0.5) * 20).toFixed(2)
-    ])
-  }
-  return { code: 200, data: points }
-})
+// 3. 单设备实时趋势（60 分钟）
+Mock.mock(/\/api\/dashboard\/realtime\/\w+\/\w+/, 'get', () => ({
+  code: 200,
+  message: 'success',
+  data: generateRealtimeData(),
+}))
 
-/* 4. 如有其它接口，继续往下写...
-   Mock.mock('/api/xxx', 'post', {...})
-*/
-
-console.log('[Mock] 规则注册完成')
+console.log('✅ Dashboard mock loaded')

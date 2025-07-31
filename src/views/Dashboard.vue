@@ -93,6 +93,7 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
+import { getDevices, getRealtime, getAlarms } from '../api/dashboard'
 
 /* --------- 常量 --------- */
 const statusMap = {
@@ -109,12 +110,12 @@ const typeMap = {
 
 /* --------- 响应式数据 --------- */
 const currentTime = ref('')
-const todayProduction = ref(0)
+const todayProduction = ref(0) // ⚠️ 无对应接口，保留为 0 或后续补充
 const equipmentOnline = ref(0)
 const equipmentTotal = ref(0)
 
-const equipmentList = ref([])     // equipment 表
-const alarmList = ref([])         // alarm_record 表
+const equipmentList = ref([])
+const alarmList = ref([])
 const trendChartRef = ref(null)
 const deviceChartRef = ref(null)
 
@@ -125,9 +126,6 @@ let deviceChart = null
 const drawerVisible = ref(false)
 const activeDevice = ref(null)
 
-/* --------- 工具函数 --------- */
-const $get = url => fetch(url).then(r => r.json())
-
 /* --------- 生命周期 --------- */
 onMounted(async () => {
   // 实时时钟
@@ -135,37 +133,25 @@ onMounted(async () => {
     currentTime.value = new Date().toLocaleString()
   }, 1000)
 
-  // 今日产量（production_data 聚合）
-  const prodRes = await $get('/api/production_data/today')
-  todayProduction.value = prodRes.data.reduce((s, d) => s + d.production_quantity, 0)
-
   // 设备列表
-  const eqRes = await $get('/api/equipment')
-  equipmentList.value = eqRes.data
-  equipmentTotal.value = eqRes.data.length
-  equipmentOnline.value = eqRes.data.filter(e => e.equipment_status === 'normal').length
+  try {
+    const { data } = await getDevices()
+    equipmentList.value = data
+    equipmentTotal.value = data.length
+    equipmentOnline.value = data.filter(e => e.equipment_status === 'normal').length
+  } catch (e) {
+    ElMessage.error('获取设备列表失败')
+  }
 
-  // 报警
-  const alarmRes = await $get('/api/alarm_record/latest')
-  alarmList.value = alarmRes.data.slice(0, 8)
+  // 报警列表
+  try {
+    const { data } = await getAlarms()
+    alarmList.value = data.slice(0, 8)
+  } catch (e) {
+    ElMessage.error('获取报警列表失败')
+  }
 
-  // 全局趋势
-  trendChart = echarts.init(trendChartRef.value)
-  const trendRes = await $get('/api/realtime/trend/global')
-  trendChart.setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { left: 40, top: 20, right: 20, bottom: 20 },
-    xAxis: { type: 'time', boundaryGap: false },
-    yAxis: { type: 'value', name: '产量(件/小时)' },
-    series: [{
-      type: 'line',
-      smooth: true,
-      symbol: 'none',
-      itemStyle: { color: '#00ccff' },
-      areaStyle: { opacity: 0.15 },
-      data: trendRes.data
-    }]
-  })
+  // ⚠️ 全局趋势图无对应接口，暂不渲染
 })
 
 onUnmounted(() => {
@@ -178,22 +164,27 @@ async function openDrawer(device) {
   activeDevice.value = device
   drawerVisible.value = true
   await nextTick()
-  deviceChart = echarts.init(deviceChartRef.value)
-  const res = await $get(`/api/realtime/trend/${device.equipment_type}/${device.equipment_id}`)
-  deviceChart.setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { left: 40, top: 20, right: 20, bottom: 20 },
-    xAxis: { type: 'time', boundaryGap: false },
-    yAxis: { type: 'value', name: '实时值' },
-    series: [{
-      type: 'line',
-      smooth: true,
-      symbol: 'none',
-      color: '#409eff',
-      areaStyle: { opacity: 0.15 },
-      data: res.data
-    }]
-  })
+
+  try {
+    const { data } = await getRealtime(device.equipment_type, device.equipment_id)
+    deviceChart = echarts.init(deviceChartRef.value)
+    deviceChart.setOption({
+      tooltip: { trigger: 'axis' },
+      grid: { left: 40, top: 20, right: 20, bottom: 20 },
+      xAxis: { type: 'time', boundaryGap: false },
+      yAxis: { type: 'value', name: '实时值' },
+      series: [{
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
+        color: '#409eff',
+        areaStyle: { opacity: 0.15 },
+        data: data
+      }]
+    })
+  } catch (e) {
+    ElMessage.error('获取设备趋势失败')
+  }
 }
 </script>
 

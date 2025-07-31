@@ -4,11 +4,11 @@ import { ElMessage } from "element-plus"
 
 // 获取API基础URL
 const getApiBaseUrl = () => {
-  // 开发环境
+  //开发环境(启用mock)
   // if (import.meta.env.DEV) {
   //   return import.meta.env.VITE_API_BASE_URL || "/api"
   // }
-  // 生产环境
+  //生产环境
   return "http://127.0.0.1:8000/api"
 }
 

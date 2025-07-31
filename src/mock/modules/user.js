@@ -1,33 +1,37 @@
 import Mock from "mockjs"
 
-// 模拟登录接口
+// 模拟登录接口（字段统一为 user_name / password）
 Mock.mock("/api/user/login", "post", (options) => {
   const body = JSON.parse(options.body)
-  const { username, password } = body
+  const { user_name, password } = body
 
-  // ✅ 模拟两个账号
+  // 模拟两个账号
   const users = [
-    { username: "admin", password: "admin123", role: "admin" },
-    { username: "123", password: "123456", role: "xixi" }
+    { user_name: "admin", password: "admin123", role: "admin" },
+    { user_name: "123", password: "123456", role: "xixi" }
   ]
 
-  const user = users.find(u => u.username === username && u.password === password)
+  const user = users.find(u => u.user_name === user_name && u.password === password)
 
   if (user) {
-    return {
-      user: {
-        id: Mock.mock('@id'),
-        username: user.username,
-        role: user.role,
-      },
-      token: "fake-jwt-token-" + Date.now(),
-      refreshToken: "fake-refresh-token-" + Date.now(),
-    }
-  } else {
     return Mock.mock({
-      status: 401,
-      message: "用户名或密码错误",
+      code: 200,
+      message: "登录成功",
+      data: {
+        user: {
+          id: "@id",
+          user_name: user.user_name,
+          role: user.role,
+        },
+        access_token: "fake-jwt-token-" + Date.now(),
+        refresh_token: "fake-refresh-token-" + Date.now(),
+      }
     })
+  } else {
+    return {
+      code: 401,
+      message: "用户名或密码错误"
+    }
   }
 })
 
@@ -36,38 +40,20 @@ Mock.mock("/api/user/logout", "post", () => {
   return { success: true }
 })
 
-// 模拟刷新token接口
+// 模拟刷新 token 接口（字段统一为 refresh_token）
 Mock.mock("/api/user/refresh", "post", (options) => {
   const body = JSON.parse(options.body)
-  const { refreshToken } = body
+  const { refresh_token } = body
 
-  if (refreshToken && refreshToken.startsWith("fake-refresh-token-")) {
+  if (refresh_token && refresh_token.startsWith("fake-refresh-token-")) {
     return {
-      token: "fake-jwt-token-" + Date.now(),
+      access_token: "fake-jwt-token-" + Date.now(),
     }
   } else {
-    return Mock.mock({
-      status: 401,
-      message: "Invalid refresh token",
-    })
-  }
-})
-
-// 模拟获取当前用户信息接口
-Mock.mock("/api/user/me", "get", (options) => {
-  const authorization = options.headers?.Authorization || options.headers?.authorization
-
-  if (authorization && authorization.startsWith("Bearer fake-jwt-token-")) {
     return {
-      id: 1,
-      username: "admin",
-      role: "admin",
+      code: 401,
+      message: "Invalid refresh token"
     }
-  } else {
-    return Mock.mock({
-      status: 401,
-      message: "Unauthorized",
-    })
   }
 })
 

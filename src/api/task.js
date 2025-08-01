@@ -2,17 +2,38 @@ import request from "./index"
 
 export const taskAPI = {
   // 获取生产任务列表
-  getTaskList(params) {
-    return request.get("/task/list", { params })
+  getProductionTaskList(params) {
+    return request.get("/productionTask/getProductionTaskList", { params })
   },
 
-  // 查询生产任务详情
-  getTaskDetail(task_id) {
-    return request.post("/task/detail", { task_id })
+  // 根据id获取任务信息
+  getProductionTaskById(task_id) {
+    return request.get("/productionTask/getProductionTaskById", {
+      params: { task_id },
+    })
   },
 
-  // 创建生产任务
-  createTask(taskData) {
-    return request.post("/task/create", taskData)
+  // 新增生产任务
+  addProductionTask(taskData) {
+    return request.post("/productionTask/addProductionTask", taskData)
+  },
+
+  // 更新生产任务 (全量更新)
+  updateProductionTask(taskData) {
+    return request.put("/productionTask/updatProductionTask", taskData)
+  },
+
+  // 删除生产任务
+  deleteProductionTask(task_id) {
+    return request.delete("/productionTask/deleteProductionTask", {
+      params: { task_id },
+    })
+  },
+
+  // 更新生产任务状态
+  updateProductionTaskStatus(task_id, status) {
+    return request.patch("/productionTask/updateProductionTaskStatus", null, {
+      params: { task_id, status },
+    })
   },
 }

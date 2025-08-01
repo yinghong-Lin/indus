@@ -156,7 +156,7 @@ const generateEquipmentData = () => {
 const equipmentData = generateEquipmentData();
 
 // 获取设备列表接口
-Mock.mock(/\/productionControl\/getEquipmentList/, "get", ({ url }) => {
+Mock.mock(/\/api\/productionControl\/getEquipmentList/, "get", ({ url }) => {
   const u = new URL("http://localhost" + url);
   const page = Number(u.searchParams.get("page") || 1);
   const page_size = Number(u.searchParams.get("page_size") || 10);
@@ -181,7 +181,7 @@ Mock.mock(/\/productionControl\/getEquipmentList/, "get", ({ url }) => {
 });
 
 // 根据id获取设备信息
-Mock.mock(/\/productionControl\/getEquipmentById/, "get", ({ url }) => {
+Mock.mock(/\/api\/productionControl\/getEquipmentById/, "get", ({ url }) => {
   const u = new URL("http://localhost" + url);
   const equipment_id = u.searchParams.get("equipment_id");
 
@@ -272,7 +272,7 @@ Mock.mock(/\/api\/productionControl\/deleteEquipment/, "delete", ({ url }) => {
 });
 
 // 更新设备接口
-Mock.mock("/productionControl/updateEquipment", "put", ({ body }) => {
+Mock.mock("/api/productionControl/updateEquipment", "put", ({ body }) => {
   try {
     const data = JSON.parse(body);
 

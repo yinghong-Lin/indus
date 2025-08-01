@@ -17,7 +17,6 @@
           导出报告
         </el-button>
       </div>
-      
     </div>
 
     <!-- 生产流程图 -->
@@ -25,40 +24,36 @@
       <div class="flow-title">
         <h2>化妆品生产流程监控</h2>
         <div class="flow-controls">
-          <el-button type="primary" size="small" @click="refreshData">
+          <el-button type="primary" size="small" @click="refreshData" :loading="loading">
             <el-icon>
               <Refresh />
             </el-icon>
             刷新
           </el-button>
-          <el-button type="success" size="small" @click="startProduction" :disabled="isProducing">
+          <el-button type="success" size="small" @click="startProduction" :disabled="isProducing || loading">
             <el-icon>
               <VideoPlay />
             </el-icon>
             开始生产
           </el-button>
-          <el-button type="warning" size="small" @click="pauseProduction" :disabled="!isProducing">
+          <el-button type="warning" size="small" @click="pauseProduction" :disabled="!isProducing || loading">
             <el-icon>
               <VideoPause />
             </el-icon>
             暂停生产
           </el-button>
         </div>
-
       </div>
 
       <!-- 工艺流程线 -->
       <div class="process-line">
         <!-- 注塑工艺 -->
         <div class="process-station">
-          <div class="equipment-image-container" @mouseenter="showTooltip('injection', $event)"
-            @mouseleave="hideTooltip" @click="showProcessParameterDialog('injection')">
+          <div class="equipment-image-container" @mouseenter="showTooltip('injection_molding', $event)"
+            @mouseleave="hideTooltip" @click="showProcessParameterDialog('injection_molding')">
             <img src="/注塑机.png?height=120&width=160" alt="注塑机" class="equipment-image"
-              :class="getWorkshopStatusClass('injection')" />
-            <div class="status-indicator" :class="getWorkshopStatus('injection')"></div>
-            <div class="equipment-overlay">
-              <span>点击设置参数</span>
-            </div>
+              :class="getWorkshopStatusClass('injection_molding')" />
+            <div class="status-indicator" :class="getWorkshopStatus('injection_molding')"></div>
           </div>
         </div>
 
@@ -66,22 +61,16 @@
         <div class="flow-arrow">
           <div class="arrow-line" :class="{ active: isProducing }">
             <div class="arrow-head">→</div>
-            <div class="flow-items" v-if="isProducing">
-              <div class="flow-item" v-for="i in 3" :key="i"></div>
-            </div>
           </div>
         </div>
 
         <!-- 喷漆工艺 -->
         <div class="process-station">
-          <div class="equipment-image-container" @mouseenter="showTooltip('painting', $event)" @mouseleave="hideTooltip"
-            @click="showProcessParameterDialog('painting')">
+          <div class="equipment-image-container" @mouseenter="showTooltip('spray_painting', $event)" @mouseleave="hideTooltip"
+            @click="showProcessParameterDialog('spray_painting')">
             <img src="/喷漆机.png?height=120&width=160" alt="喷漆机" class="equipment-image"
-              :class="getWorkshopStatusClass('painting')" />
-            <div class="status-indicator" :class="getWorkshopStatus('painting')"></div>
-            <div class="equipment-overlay">
-              <span>点击设置参数</span>
-            </div>
+              :class="getWorkshopStatusClass('spray_painting')" />
+            <div class="status-indicator" :class="getWorkshopStatus('spray_painting')"></div>
           </div>
         </div>
 
@@ -89,22 +78,16 @@
         <div class="flow-arrow">
           <div class="arrow-line" :class="{ active: isProducing }">
             <div class="arrow-head">→</div>
-            <div class="flow-items" v-if="isProducing">
-              <div class="flow-item" v-for="i in 3" :key="i"></div>
-            </div>
           </div>
         </div>
 
         <!-- 丝印工艺 -->
         <div class="process-station">
-          <div class="equipment-image-container" @mouseenter="showTooltip('printing', $event)" @mouseleave="hideTooltip"
-            @click="showProcessParameterDialog('printing')">
+          <div class="equipment-image-container" @mouseenter="showTooltip('screen_printing', $event)" @mouseleave="hideTooltip"
+            @click="showProcessParameterDialog('screen_printing')">
             <img src="/丝印机.png?height=120&width=160" alt="丝印机" class="equipment-image"
-              :class="getWorkshopStatusClass('printing')" />
-            <div class="status-indicator" :class="getWorkshopStatus('printing')"></div>
-            <div class="equipment-overlay">
-              <span>点击设置参数</span>
-            </div>
+              :class="getWorkshopStatusClass('screen_printing')" />
+            <div class="status-indicator" :class="getWorkshopStatus('screen_printing')"></div>
           </div>
         </div>
 
@@ -112,22 +95,16 @@
         <div class="flow-arrow">
           <div class="arrow-line" :class="{ active: isProducing }">
             <div class="arrow-head">→</div>
-            <div class="flow-items" v-if="isProducing">
-              <div class="flow-item" v-for="i in 3" :key="i"></div>
-            </div>
           </div>
         </div>
 
         <!-- 烫金工艺 -->
         <div class="process-station">
-          <div class="equipment-image-container" @mouseenter="showTooltip('stamping', $event)" @mouseleave="hideTooltip"
-            @click="showProcessParameterDialog('stamping')">
+          <div class="equipment-image-container" @mouseenter="showTooltip('hot_stamping', $event)" @mouseleave="hideTooltip"
+            @click="showProcessParameterDialog('hot_stamping')">
             <img src="/烫金机.png?height=120&width=160" alt="烫金机" class="equipment-image"
-              :class="getWorkshopStatusClass('stamping')" />
-            <div class="status-indicator" :class="getWorkshopStatus('stamping')"></div>
-            <div class="equipment-overlay">
-              <span>点击设置参数</span>
-            </div>
+              :class="getWorkshopStatusClass('hot_stamping')" />
+            <div class="status-indicator" :class="getWorkshopStatus('hot_stamping')"></div>
           </div>
         </div>
 
@@ -135,9 +112,6 @@
         <div class="flow-arrow">
           <div class="arrow-line" :class="{ active: isProducing }">
             <div class="arrow-head">→</div>
-            <div class="flow-items" v-if="isProducing">
-              <div class="flow-item" v-for="i in 3" :key="i"></div>
-            </div>
           </div>
         </div>
 
@@ -155,19 +129,19 @@
       <div class="production-overview">
         <div class="overview-item">
           <div class="overview-label">任务编号</div>
-          <div class="overview-value">{{ currentTask.number }}</div>
+          <div class="overview-value">{{ currentTask.task_name || 'N/A' }}</div>
         </div>
         <div class="overview-item">
           <div class="overview-label">产品</div>
-          <div class="overview-value">{{ currentTask.product }}</div>
+          <div class="overview-value">{{ currentTask.product_name || 'N/A' }}</div>
         </div>
         <div class="overview-item">
           <div class="overview-label">进度</div>
-          <div class="overview-value">{{ currentTask.progress }}%</div>
+          <div class="overview-value">{{ (currentTask.production_progress * 100).toFixed(0) || 0 }}%</div>
         </div>
         <div class="overview-item">
-          <div class="overview-label">完成数量</div>
-          <div class="overview-value">{{ currentTask.completed }}/{{ currentTask.target }}</div>
+          <div class="overview-label">目标数量</div>
+          <div class="overview-value">{{ currentTask.production_quantity || 0 }}</div>
         </div>
       </div>
     </div>
@@ -176,159 +150,57 @@
     <div v-if="tooltipVisible" class="equipment-tooltip"
       :style="{ left: tooltipPosition.x + 'px', top: tooltipPosition.y + 'px' }">
       <div class="tooltip-header">
-        <h4>{{ tooltipData.title }}</h4>
-        <el-tag :type="getWorkshopStatusType(tooltipData.type)" size="small">
-          {{ getWorkshopStatusText(tooltipData.type) }}
-        </el-tag>
+        <h4>{{ getTypeName(tooltipData.type) }}</h4>
       </div>
       <div class="tooltip-content">
         <div class="tooltip-stats">
           <div class="stat-item">
-            <span class="stat-label">在线设备:</span>
-            <span class="stat-value">{{ tooltipData.onlineCount }}/{{ tooltipData.totalCount }}</span>
+            <span class="stat-label">设备总数:</span>
+            <span class="stat-value">{{ tooltipData.totalCount }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">平均效率:</span>
-            <span class="stat-value">{{ tooltipData.avgEfficiency }}%</span>
+            <span class="stat-label">运行中:</span>
+            <span class="stat-value">{{ tooltipData.runningCount }}</span>
           </div>
           <div class="stat-item">
-            <span class="stat-label">当前产量:</span>
-            <span class="stat-value">{{ tooltipData.currentOutput }}</span>
+            <span class="stat-label">空闲:</span>
+            <span class="stat-value">{{ tooltipData.idleCount }}</span>
           </div>
+          <div class="stat-item">
+            <span class="stat-label">停机中：</span>
+            <span class="stat-value">{{ tooltipData.offCount }}</span>
+          </div>
+          <!-- <div class="stat-item">
+            <span class="stat-label">故障:</span>
+            <span class="stat-value">{{ tooltipData.faultCount }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">维护中:</span>
+            <span class="stat-value">{{ tooltipData.maintainCount }}</span>
+          </div> -->
         </div>
       </div>
     </div>
 
     <!-- 工艺参数设置对话框 -->
     <el-dialog v-model="parameterDialogVisible"
-      :title="selectedProcessType ? processConfigs[selectedProcessType].name + ' - 工艺参数设置' : ''" width="800px"
+      :title="selectedProcessType ? getTypeName(selectedProcessType) + '' : ''" width="400px"
       class="parameter-dialog">
-      <div v-if="selectedProcessType" class="parameter-detail">
-        <!-- 参数设置表单 -->
-        <div class="parameter-section">
-          <el-form :model="processParameters[selectedProcessType]" label-width="180px" class="parameter-form">
-            <!-- 注塑机参数（injection_molding_machine_setting） -->
-            <template v-if="selectedProcessType === 'injection'">
-              <el-form-item label="加热温度范围 (℃)">
-                <el-input v-model="processParameters.injection.heating_temp_range" placeholder="如160-220" />
-              </el-form-item>
-              <el-form-item label="冷却时间 (s)">
-                <el-input-number v-model="processParameters.injection.cooling_time" :min="1" :max="999" />
-              </el-form-item>
-              <el-form-item label="注射速度 (mm/s)">
-                <el-input-number v-model="processParameters.injection.injection_speed" :min="1" :max="999" />
-              </el-form-item>
-              <el-form-item label="注射压力 (MPa)">
-                <el-input-number v-model="processParameters.injection.injection_pressure" :min="0.1" :max="999"
-                  :step="0.1" />
-              </el-form-item>
-              <el-form-item label="注射时间 (s)">
-                <el-input-number v-model="processParameters.injection.injection_time" :min="1" :max="999" />
-              </el-form-item>
-              <el-form-item label="开模时间 (s)">
-                <el-input-number v-model="processParameters.injection.opening_time" :min="1" :max="999" />
-              </el-form-item>
-              <el-form-item label="合模时间 (s)">
-                <el-input-number v-model="processParameters.injection.closing_time" :min="1" :max="999" />
-              </el-form-item>
-              <el-form-item label="保压压力 (MPa)">
-                <el-input-number v-model="processParameters.injection.holding_pressure" :min="0.1" :max="999"
-                  :step="0.1" />
-              </el-form-item>
-              <el-form-item label="保压时间 (s)">
-                <el-input-number v-model="processParameters.injection.holding_time" :min="1" :max="999" />
-              </el-form-item>
-              <el-form-item label="注射位置偏差 (mm)">
-                <el-input-number v-model="processParameters.injection.injection_position_deviation" :min="0" :max="10"
-                  :step="0.01" />
-              </el-form-item>
-              <el-form-item label="螺杆转速 (r/min)">
-                <el-input-number v-model="processParameters.injection.screw_speed" :min="1" :max="2000" />
-              </el-form-item>
+      
+      <!-- 对应设备类型的设备列表 -->
+      <div class="equipment-list-by-type">
+        <el-table :data="selectedTypeEquipmentList" stripe style="width: 100%">
+          <el-table-column prop="equipment_name" label="设备名称" min-width="180" />
+          <el-table-column prop="equipment_status" label="运行状态" width="120">
+            <template #default="scope">
+              <el-tag :type="getStatusTagType(scope.row.equipment_status)">
+                {{ getStatusName(scope.row.equipment_status) }}
+              </el-tag>
             </template>
-
-            <!-- 喷漆机参数（spray_painting_machine_setting） -->
-            <template v-else-if="selectedProcessType === 'painting'">
-              <el-form-item label="漆料粘度范围 (Pa·s)">
-                <el-input v-model="processParameters.painting.paint_viscosity_range" placeholder="如15-25" />
-              </el-form-item>
-              <el-form-item label="喷涂压力 (MPa)">
-                <el-input-number v-model="processParameters.painting.spray_pressure" :min="0.1" :max="2" :step="0.1" />
-              </el-form-item>
-              <el-form-item label="喷涂距离 (mm)">
-                <el-input-number v-model="processParameters.painting.spray_distance" :min="50" :max="500" />
-              </el-form-item>
-              <el-form-item label="喷涂速度 (m/s)">
-                <el-input-number v-model="processParameters.painting.spray_speed" :min="0.1" :max="10" :step="0.1" />
-              </el-form-item>
-              <el-form-item label="烘干温度 (℃)">
-                <el-input-number v-model="processParameters.painting.drying_temp" :min="20" :max="120" />
-              </el-form-item>
-              <el-form-item label="烘干时间 (分钟)">
-                <el-input-number v-model="processParameters.painting.drying_time" :min="1" :max="999" />
-              </el-form-item>
-            </template>
-
-            <!-- 丝印机参数（screen_printing_machine_setting） -->
-            <template v-else-if="selectedProcessType === 'printing'">
-              <el-form-item label="颜料类型模板类型">
-                <el-input v-model="processParameters.printing.ink_type_template_type" placeholder="如UV油墨+聚酯网版" />
-              </el-form-item>
-              <el-form-item label="丝印压力 (MPa)">
-                <el-input-number v-model="processParameters.printing.printing_pressure" :min="0.1" :max="2"
-                  :step="0.1" />
-              </el-form-item>
-              <el-form-item label="丝印速度 (m/s)">
-                <el-input-number v-model="processParameters.printing.printing_speed" :min="0.1" :max="10" :step="0.1" />
-              </el-form-item>
-              <el-form-item label="油墨粘度 (Pa·s)">
-                <el-input-number v-model="processParameters.printing.ink_viscosity" :min="1" :max="100" :step="0.1" />
-              </el-form-item>
-              <el-form-item label="油墨干燥时间 (秒)">
-                <el-input-number v-model="processParameters.printing.ink_drying_time" :min="1" :max="999" />
-              </el-form-item>
-            </template>
-
-            <!-- 烫金机参数（hot_stamping_machine_setting） -->
-            <template v-else-if="selectedProcessType === 'stamping'">
-              <el-form-item label="烫金温度范围 (℃)">
-                <el-input v-model="processParameters.stamping.stamping_temp_range" placeholder="如160-180" />
-              </el-form-item>
-              <el-form-item label="烫金压力范围 (MPa)">
-                <el-input v-model="processParameters.stamping.stamping_pressure_range" placeholder="如1.5-2.0" />
-              </el-form-item>
-              <el-form-item label="烫金时间范围 (s)">
-                <el-input v-model="processParameters.stamping.stamping_time_range" placeholder="如1.0-2.0" />
-              </el-form-item>
-              <el-form-item label="金箔传送速度范围 (m/min)">
-                <el-input v-model="processParameters.stamping.foil_speed_range" placeholder="如4-6" />
-              </el-form-item>
-            </template>
-          </el-form>
-        </div>
-      </div>
-      <!-- 设备状态统计 -->
-      <div class="equipment-status-summary">
-        <h4>设备状态统计</h4>
-        <div class="status-summary-grid">
-          <div class="status-box normal">
-            <el-icon>
-              <VideoPlay />
-            </el-icon>
-            <span>正常：{{ statusSummary.running }}</span>
-          </div>
-          <div class="status-box maintenance">
-            <el-icon>
-              <Tools />
-            </el-icon>
-            <span>维修中：{{ statusSummary.maintenance }}</span>
-          </div>
-          <div class="status-box error">
-            <el-icon>
-              <Warning />
-            </el-icon>
-            <span>故障：{{ statusSummary.error }}</span>
-          </div>
+          </el-table-column>
+        </el-table>
+        <div v-if="selectedTypeEquipmentList.length === 0" class="no-data-message">
+          暂无 {{ getTypeName(selectedProcessType) }} 设备
         </div>
       </div>
 
@@ -343,195 +215,107 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-import { Tools } from '@element-plus/icons-vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Clock, Refresh, VideoPlay, VideoPause, Download, Tools, Warning } from '@element-plus/icons-vue'
+import { homeAPI } from '../api/home'
 
-const statusSummary = computed(() => {
-  const equipment = getEquipmentByType(selectedProcessType.value)
-  return {
-    running: equipment.filter(e => e.status === 'running').length,
-    maintenance: equipment.filter(e => e.status === 'maintenance').length,
-    error: equipment.filter(e => e.status === 'error').length
-  }
-})
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import {
-  Clock, TrendCharts, DataAnalysis, Warning, Refresh, VideoPlay, VideoPause
-} from '@element-plus/icons-vue'
+// 中文映射
+const typeNameMap = {
+  injection_molding: '注塑工艺',
+  screen_printing: '丝印工艺',
+  hot_stamping: '烫金工艺',
+  spray_painting: '喷漆工艺',
+}
+
+const statusNameMap = {
+  OFF: '已停机',
+  ON_IDLE: '空闲中',
+  ON_RUNNING: '运行中',
+  // FAULT: '故障',
+  // MAINTAIN: '维护中'
+}
 
 // 响应式数据
+const loading = ref(false)
 const currentTime = ref('')
-const todayProduction = ref(1850)
-const overallEfficiency = ref(89)
-const alarmCount = ref(2)
-const isProducing = ref(true)
+const isProducing = ref(false)
 const parameterDialogVisible = ref(false)
 const selectedProcessType = ref(null)
 
 const tooltipVisible = ref(false)
 const tooltipPosition = reactive({ x: 0, y: 0 })
-const tooltipData = reactive({})
+const tooltipData = reactive({
+  type: '',
+  totalCount: 0,
+  runningCount: 0,
+  idleCount: 0,
+  offCount: 0,
+  // faultCount: 0,
+  // maintainCount: 0,
+})
 
-// 工艺配置
-const processConfigs = {
-  injection: {
-    name: '注塑工艺',
-    color: 'bg-blue-500'
-  },
-  painting: {
-    name: '喷漆工艺',
-    color: 'bg-green-500'
-  },
-  printing: {
-    name: '丝印工艺',
-    color: 'bg-purple-500'
-  },
-  stamping: {
-    name: '烫金工艺',
-    color: 'bg-yellow-500'
+// 从API获取的设备状态列表
+const equipmentStatusList = ref([])
+// 从API获取的进行中任务
+const currentTask = reactive({
+  task_id: '',
+  task_name: '',
+  product_name: '',
+  production_quantity: 0,
+  production_progress: 0,
+})
+
+// 新增：用于存储点击设备类型后获取的该类型下的设备列表
+const selectedTypeEquipmentList = ref([]);
+
+// 计算属性：设备状态统计（用于参数设置弹窗）
+const statusSummary = computed(() => {
+  const equipment = equipmentStatusList.value.filter(eq => eq.equipment_type === selectedProcessType.value);
+  return {
+    running: equipment.filter(e => e.equipment_status === 'ON_RUNNING').length,
+    // maintenance: equipment.filter(e => e.equipment_status === 'MAINTAIN').length,
+    // fault: equipment.filter(e => e.equipment_status === 'FAULT').length,
+    off: equipment.filter(e => e.equipment_status === 'OFF').length,
+    idle: equipment.filter(e => e.equipment_status === 'ON_IDLE').length,
   }
+})
+
+// 工具函数
+const getTypeName = (type) => typeNameMap[type] || type
+const getStatusName = (status) => statusNameMap[status] || status
+const getStatusTagType = (status) => {
+  const statusMap = {
+    ON_RUNNING: 'success',
+    OFF: 'info',
+    ON_IDLE: 'info',
+    // FAULT: 'danger',
+    // MAINTAIN: 'warning'
+  }
+  return statusMap[status] || 'info'
 }
 
-// 工艺参数 - 每种工艺统一参数
-const processParameters = reactive({
-  injection: {
-    heating_temp_range: '180-220',
-    cooling_time: 15,
-    injection_speed: 80,
-    injection_pressure: 120,
-    injection_time: 3,
-    opening_time: 2,
-    closing_time: 1,
-    holding_pressure: 80.5,
-    holding_time: 5,
-    injection_position_deviation: 0.05,
-    screw_speed: 120
-  },
-  painting: {
-    paint_viscosity_range: '15-25',
-    spray_pressure: 0.5,
-    spray_distance: 200,
-    spray_speed: 1.2,
-    drying_temp: 70,
-    drying_time: 20
-  },
-  printing: {
-    ink_type_template_type: 'UV油墨+聚酯网版',
-    printing_pressure: 0.6,
-    printing_speed: 1.0,
-    ink_viscosity: 12.5,
-    ink_drying_time: 30
-  },
-  stamping: {
-    stamping_temp_range: '160-180',
-    stamping_pressure_range: '1.5-2.0',
-    stamping_time_range: '1.0-2.0',
-    foil_speed_range: '4-6'
-  }
-})
+const getWorkshopStatus = (workshopType) => {
+  const equipment = getEquipmentStatusByType(workshopType);
+  if (equipment.length === 0) return 'stopped'; 
 
-// 当前批次信息
-const currentTask = reactive({
-  number: 'BATCH-2024-CM001',
-  product: '化妆品包装盒',
-  target: 2000,
-  completed: 1480,
-  progress: 74
-})
+  
+  // const hasFault = equipment.some(eq => eq.equipment_status === 'FAULT');
+  // const hasMaintain = equipment.some(eq => eq.equipment_status === 'MAINTAIN');
+  const allRunning = equipment.every(eq => eq.equipment_status === 'ON_RUNNING');
+  const allStopped = equipment.every(eq => eq.equipment_status === 'OFF' || eq.equipment_status === 'ON_IDLE');
 
-// 设备数据 - 同一工艺下设备使用相同参数
-const injectionEquipment = reactive([
-  {
-    id: 'im001',
-    name: '注塑机1号',
-    type: 'injection',
-    location: '注塑车间B-01',
-    status: 'running',
-    efficiency: 94,
-    currentOutput: 1650,
-    runTime: 16.2,
-    faultCount: 0
-  },
-  {
-    id: 'im002',
-    name: '注塑机2号',
-    type: 'injection',
-    location: '注塑车间B-02',
-    status: 'maintenance',
-    efficiency: 0,
-    currentOutput: 0,
-    runTime: 0,
-    faultCount: 2
-  }
-])
+  // if (hasFault) return 'fault';
+  // if (hasMaintain) return 'maintenance';
+  if (allRunning) return 'running';
+  if (allStopped) return 'stopped';
+  return 'warning'; 
+}
 
-const paintingEquipment = reactive([
-  {
-    id: 'pt001',
-    name: '喷漆机1号',
-    type: 'painting',
-    location: '喷漆车间C-01',
-    status: 'running',
-    efficiency: 88,
-    currentOutput: 1420,
-    runTime: 14.5,
-    faultCount: 0
-  },
-  {
-    id: 'pt002',
-    name: '喷漆机2号',
-    type: 'painting',
-    location: '喷漆车间C-02',
-    status: 'running',
-    efficiency: 91,
-    currentOutput: 1580,
-    runTime: 18.7,
-    faultCount: 0
-  }
-])
-
-const printingEquipment = reactive([
-  {
-    id: 'ss001',
-    name: '丝印机1号',
-    type: 'printing',
-    location: '丝印车间D-01',
-    status: 'running',
-    efficiency: 85,
-    currentOutput: 1520,
-    runTime: 20.1,
-    faultCount: 0
-  },
-  {
-    id: 'ss002',
-    name: '丝印机2号',
-    type: 'printing',
-    location: '丝印车间D-02',
-    status: 'running',
-    efficiency: 89,
-    currentOutput: 1580,
-    runTime: 18.9,
-    faultCount: 0
-  }
-])
-
-const stampingEquipment = reactive([
-  {
-    id: 'hs001',
-    name: '烫金机1号',
-    type: 'stamping',
-    location: '烫金车间E-01',
-    status: 'running',
-    efficiency: 88,
-    currentOutput: 1580,
-    runTime: 18.7,
-    faultCount: 0
-  }
-])
-
-// 方法
-const alarmClass = ref('normal')
+const getWorkshopStatusClass = (workshopType) => {
+  const status = getWorkshopStatus(workshopType)
+  return `status-${status}`
+}
 
 const updateTime = () => {
   const now = new Date()
@@ -545,141 +329,28 @@ const updateTime = () => {
   })
 }
 
-const getEquipmentByType = (type) => {
-  switch (type) {
-    case 'injection':
-      return injectionEquipment
-    case 'painting':
-      return paintingEquipment
-    case 'printing':
-      return printingEquipment
-    case 'stamping':
-      return stampingEquipment
-    default:
-      return []
-  }
-}
-
-const getEquipmentStatusClass = (status) => {
-  return `status-${status}`
-}
-
-const getStatusTagType = (status) => {
-  const statusMap = {
-    running: 'success',
-    warning: 'warning',
-    stopped: 'danger',
-    maintenance: 'info',
-    error: 'danger'
-  }
-  return statusMap[status] || 'info'
-}
-
-const getStatusText = (status) => {
-  const statusMap = {
-    running: '运行中',
-    warning: '警告',
-    stopped: '已停止',
-    maintenance: '维护中',
-    error: '故障'
-  }
-  return statusMap[status] || '未知'
-}
-
-const getProcessStatusType = (processType) => {
-  const equipment = getEquipmentByType(processType)
-  const hasError = equipment.some(eq => eq.status === 'error')
-  const hasWarning = equipment.some(eq => eq.status === 'warning' || eq.status === 'maintenance')
-  const allRunning = equipment.every(eq => eq.status === 'running')
-
-  if (hasError) return 'danger'
-  if (hasWarning) return 'warning'
-  if (allRunning) return 'success'
-  return 'info'
-}
-
-const getProcessStatusText = (processType) => {
-  const type = getProcessStatusType(processType)
-  const statusMap = {
-    success: '正常运行',
-    warning: '需要关注',
-    danger: '异常状态',
-    info: '待机状态'
-  }
-  return statusMap[type] || '未知状态'
-}
-
-const refreshData = () => {
-  ElMessage.success('数据已刷新')
-  todayProduction.value += Math.floor(Math.random() * 10)
-  overallEfficiency.value = Math.max(80, Math.min(100, overallEfficiency.value + (Math.random() - 0.5) * 5))
-}
-
-const startProduction = () => {
-  isProducing.value = true
-  ElMessage.success('生产已开始')
-}
-
-const pauseProduction = () => {
-  isProducing.value = false
-  ElMessage.warning('生产已暂停')
-}
-
-const getWorkshopStatus = (workshopType) => {
-  const equipment = getEquipmentByType(workshopType)
-  const hasError = equipment.some(eq => eq.status === 'error')
-  const hasWarning = equipment.some(eq => eq.status === 'warning' || eq.status === 'maintenance')
-  const allRunning = equipment.every(eq => eq.status === 'running')
-
-  if (hasError) return 'error'
-  if (hasWarning) return 'warning'
-  if (allRunning) return 'running'
-  return 'stopped'
-}
-
-const getWorkshopStatusClass = (workshopType) => {
-  const status = getWorkshopStatus(workshopType)
-  return `status-${status}`
-}
-
-const getWorkshopStatusType = (workshopType) => {
-  const status = getWorkshopStatus(workshopType)
-  const statusMap = {
-    running: 'success',
-    warning: 'warning',
-    error: 'danger',
-    stopped: 'info'
-  }
-  return statusMap[status] || 'info'
-}
-
-const getWorkshopStatusText = (workshopType) => {
-  const status = getWorkshopStatus(workshopType)
-  const statusMap = {
-    running: '正常运行',
-    warning: '需要关注',
-    error: '异常状态',
-    stopped: '停机状态'
-  }
-  return statusMap[status] || '未知状态'
+const getEquipmentStatusByType = (type) => {
+  return equipmentStatusList.value.filter(eq => eq.equipment_type === type);
 }
 
 const showTooltip = (workshopType, event) => {
-  const equipment = getEquipmentByType(workshopType)
-  const title = processConfigs[workshopType].name
-
-  const onlineCount = equipment.filter(eq => eq.status === 'running').length
-  const totalCount = equipment.length
-  const avgEfficiency = Math.round(equipment.reduce((sum, eq) => sum + eq.efficiency, 0) / totalCount)
-  const currentOutput = equipment.reduce((sum, eq) => sum + (eq.currentOutput || 0), 0)
+  const equipment = getEquipmentStatusByType(workshopType);
+  
+  const totalCount = equipment.length;
+  const runningCount = equipment.filter(eq => eq.equipment_status === 'ON_RUNNING').length;
+  const idleCount = equipment.filter(eq => eq.equipment_status === 'ON_IDLE').length;
+  const offCount = equipment.filter(eq => eq.equipment_status === 'OFF').length;
+  // const faultCount = equipment.filter(eq => eq.equipment_status === 'FAULT').length;
+  // const maintainCount = equipment.filter(eq => eq.equipment_status === 'MAINTAIN').length;
 
   Object.assign(tooltipData, {
-    title,
     type: workshopType,
-    onlineCount,
     totalCount,
-    avgEfficiency,
-    currentOutput
+    runningCount,
+    idleCount,
+    // faultCount,
+    // maintainCount,
+    offCount
   })
 
   tooltipPosition.x = event.clientX + 10
@@ -691,36 +362,135 @@ const hideTooltip = () => {
   tooltipVisible.value = false
 }
 
-const showProcessParameterDialog = (processType) => {
+const showProcessParameterDialog = async (processType) => {
   selectedProcessType.value = processType
   parameterDialogVisible.value = true
-}
-
-const getOnlineCount = (equipment) => {
-  return equipment.filter(eq => eq.status === 'running').length
-}
-
-const getAvgEfficiency = (equipment) => {
-  return Math.round(equipment.reduce((sum, eq) => sum + eq.efficiency, 0) / equipment.length)
+  // Fetch equipment list for the selected type
+  try {
+    const response = await homeAPI.getEquipmentNameAndStatusByType(processType);
+    if (response.code === 200) {
+      selectedTypeEquipmentList.value = response.data || [];
+    } else {
+      ElMessage.error(response.msg || '获取设备列表失败');
+      selectedTypeEquipmentList.value = [];
+    }
+  } catch (error) {
+    console.error('获取设备列表失败:', error);
+    ElMessage.error('获取设备列表失败');
+    selectedTypeEquipmentList.value = [];
+  }
 }
 
 const saveProcessParameters = () => {
   if (!selectedProcessType.value) return
 
-  ElMessage.success(`${processConfigs[selectedProcessType.value].name}参数设置成功，所有设备参数已更新`)
+  ElMessage.success(`${getTypeName(selectedProcessType.value)}参数设置成功，所有设备参数已更新`)
   parameterDialogVisible.value = false
+}
+
+const fetchEquipmentStatus = async () => {
+  try {
+    const response = await homeAPI.getEquipmentNameAndStatusByType('all');
+    if (response.code === 200) {
+      equipmentStatusList.value = response.data;
+      isProducing.value = equipmentStatusList.value.some(eq => eq.equipment_status === 'ON_RUNNING');
+    } else {
+      ElMessage.error(response.msg || '获取设备状态失败');
+    }
+  } catch (error) {
+    console.error('获取设备状态失败:', error);
+    ElMessage.error('获取设备状态失败');
+  }
+}
+
+const fetchInProgressTask = async () => {
+  try {
+    const response = await homeAPI.getInProgressProductionTask();
+    if (response.code === 200 && response.data && response.data.length > 0) {
+      Object.assign(currentTask, response.data[0]); 
+    } else {
+      Object.assign(currentTask, {
+        task_id: '',
+        task_name: '暂无进行中任务',
+        product_name: 'N/A',
+        production_quantity: 0,
+        production_progress: 0,
+      });
+    }
+  } catch (error) {
+    console.error('获取进行中任务失败:', error);
+    ElMessage.error('获取进行中任务失败');
+    Object.assign(currentTask, {
+      task_id: '',
+      task_name: '获取失败',
+      product_name: 'N/A',
+      production_quantity: 0,
+      production_progress: 0,
+    });
+  }
+}
+
+const refreshData = async () => {
+  loading.value = true;
+  try {
+    await Promise.all([fetchEquipmentStatus(), fetchInProgressTask()]);
+    ElMessage.success('数据已刷新');
+  } catch (error) {
+    ElMessage.error('数据刷新失败');
+  } finally {
+    loading.value = false;
+  }
+}
+
+const startProduction = async () => {
+  loading.value = true;
+  try {
+    const response = await homeAPI.updateAllEquipmentStatus('ON_RUNNING');
+    if (response.code === 200) {
+      isProducing.value = true;
+      ElMessage.success('生产已开始');
+      await fetchEquipmentStatus(); 
+    } else {
+      ElMessage.error(response.msg || '启动生产失败');
+    }
+  } catch (error) {
+    console.error('启动生产失败:', error);
+    ElMessage.error('启动生产失败');
+  } finally {
+    loading.value = false;
+  }
+}
+
+const pauseProduction = async () => {
+  loading.value = true;
+  try {
+    const response = await homeAPI.updateAllEquipmentStatus('ON_IDLE');
+    if (response.code === 200) {
+      isProducing.value = false;
+      ElMessage.warning('生产已暂停');
+      await fetchEquipmentStatus(); 
+    } else {
+      ElMessage.error(response.msg || '暂停生产失败');
+    }
+  } catch (error) {
+    console.error('暂停生产失败:', error);
+    ElMessage.error('暂停生产失败');
+  } finally {
+    loading.value = false;
+  }
+}
+
+const showExportDialog = () => {
+  ElMessage.info('导出报告功能开发中...');
 }
 
 // 生命周期
 let timeInterval = null
 
-onMounted(() => {
+onMounted(async () => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
-
-  if (alarmCount.value > 0) {
-    alarmClass.value = 'alarm'
-  }
+  await refreshData();
 })
 
 onUnmounted(() => {
@@ -779,7 +549,7 @@ onUnmounted(() => {
 
 .main-interface {
   padding: 20px;
-  background: #0f0f0f;
+  background: #0a0a0a; /* Changed to match global background */
   min-height: 100vh;
 }
 
@@ -787,8 +557,8 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 15px 20px;
   margin-bottom: 30px;
@@ -823,8 +593,8 @@ onUnmounted(() => {
 }
 
 .production-flow {
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 30px;
 }
@@ -920,6 +690,11 @@ onUnmounted(() => {
   border-color: #6b7280;
 }
 
+.equipment-image.status-maintenance {
+  border-color: #3b82f6; /* Blue for maintenance */
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+}
+
 .status-indicator {
   position: absolute;
   top: 10px;
@@ -944,6 +719,10 @@ onUnmounted(() => {
 
 .status-indicator.stopped {
   background: #6b7280;
+}
+
+.status-indicator.maintenance {
+  background: #3b82f6;
 }
 
 @keyframes pulse {
@@ -1046,9 +825,10 @@ onUnmounted(() => {
 .production-overview {
   display: flex;
   justify-content: space-around;
-  background: #262626;
+  background: rgba(38, 38, 38, 0.9);
   border-radius: 8px;
   padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .overview-item {
@@ -1070,8 +850,8 @@ onUnmounted(() => {
 /* 悬浮提示框 */
 .equipment-tooltip {
   position: fixed;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: rgba(26, 26, 26, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 15px;
   z-index: 9999;
@@ -1118,6 +898,31 @@ onUnmounted(() => {
 }
 
 /* 参数设置对话框样式 */
+.parameter-dialog :deep(.el-dialog) {
+  background: rgba(26, 26, 26, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+.parameter-dialog :deep(.el-dialog__header) {
+  background: rgba(38, 38, 38, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+.parameter-dialog :deep(.el-dialog__title) {
+  color: #ffffff;
+}
+.parameter-dialog :deep(.el-form-item__label) {
+  color: #ffffff;
+}
+.parameter-dialog :deep(.el-input__wrapper),
+.parameter-dialog :deep(.el-input-number .el-input__wrapper) {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.parameter-dialog :deep(.el-input__inner),
+.parameter-dialog :deep(.el-input-number .el-input__inner) {
+  color: #ffffff;
+}
 
 
 .process-info {
@@ -1176,7 +981,15 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-.equipment-list h4 {
+.equipment-list-by-type {
+  margin-top: 30px;
+  background: rgba(38, 38, 38, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.equipment-list-by-type h4 {
   color: #ffffff;
   margin-bottom: 15px;
   font-size: 16px;
@@ -1234,6 +1047,15 @@ onUnmounted(() => {
 .status-value {
   color: #ffffff;
   font-weight: 500;
+}
+
+.no-data-message {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 10px;
 }
 
 @media (max-width: 1200px) {

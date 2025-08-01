@@ -92,7 +92,7 @@ const handleLogin = async () => {
         authStore.token = access_token
         authStore.refreshToken = refresh_token
 
-        localStorage.setItem('userInfo', user)
+        localStorage.setItem('user', user)
         localStorage.setItem('access_token', access_token)
         localStorage.setItem('refresh_token', refresh_token)
 

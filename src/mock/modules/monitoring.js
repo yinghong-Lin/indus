@@ -1,140 +1,315 @@
 import Mock from 'mockjs'
+import dayjs from 'dayjs'
 
-/* ======== 基础常量 ======== */
-const TYPES = ['注塑机', '喷漆机', '丝印机', '烫金机']
-const STATUS = ['正常', '故障', '维修中', '停机']
-const LEVELS = ['warning', 'serious', 'critical']
-
-/* ======== 1. 工艺参数 ======== */
-const processParams = Mock.mock({
-  注塑机: {
-    setting_id: 1,
-    heating_temp_range: '180~230 ℃',
-    injection_pressure: '@float(110,130,1,1)',
-    injection_speed: '@integer(75,85)',
-    screw_speed: '@integer(115,125)',
-    holding_pressure: '@float(78,82,1,1)'
-  },
-  喷漆机: {
-    setting_id: 2,
-    spray_pressure: '@float(0.45,0.55,1,2)',
-    spray_distance: '@integer(190,210)',
-    spray_speed: '@float(1.1,1.3,1,1)',
-    drying_temp: '@integer(65,75)'
-  },
-  丝印机: {
-    setting_id: 3,
-    printing_pressure: '@float(0.55,0.65,1,2)',
-    printing_speed: '@float(0.9,1.1,1,1)',
-    ink_viscosity: '@float(11.5,13.5,1,1)',
-    ink_drying_time: '@integer(28,32)'
-  },
-  烫金机: {
-    setting_id: 4,
-    stamping_temp_range: '160~200 ℃',
-    stamping_pressure_range: '1.5~2.0 MPa',
-    stamping_time_range: '1.0~2.0 s',
-    foil_speed_range: '4~6 m/min'
+// 模拟实时数据
+const generateRealtimeData = (equipment_type, equipment_id, equipment_name) => {
+  let realtime_details = {}
+  switch (equipment_type) {
+    case 'injection_molding':
+      realtime_details = {
+        realtime_heating_temp: { unit: '℃', value: Mock.Random.natural(180, 280) },
+        realtime_injection_pressure: { unit: 'MPa', value: Mock.Random.float(0, 180, 1, 1) },
+        realtime_screw_speed: { unit: 'rpm', value: Mock.Random.natural(0, 300) },
+      }
+      break
+    case 'screen_printing':
+      realtime_details = {
+        realtime_printing_pressure: { unit: 'MPa', value: Mock.Random.float(0, 0.8, 2, 2) },
+        realtime_ink_viscosity: { unit: 'Pa·s', value: Mock.Random.float(0, 15, 1, 1) },
+        realtime_printing_speed: { unit: 'm/s', value: Mock.Random.float(0, 1.2, 1, 1) },
+      }
+      break
+    case 'hot_stamping':
+      realtime_details = {
+        realtime_foil_speed: { unit: 'm/s', value: Mock.Random.float(0, 10, 1, 1) },
+        realtime_stamping_temp: { unit: '℃', value: Mock.Random.natural(80, 150) },
+        realtime_stamping_pressure: { unit: 'MPa', value: Mock.Random.float(0, 2.5, 1, 1) },
+      }
+      break
+    case 'spray_painting':
+      realtime_details = {
+        realtime_spray_pressure: { unit: 'MPa', value: Mock.Random.float(0, 0.6, 1, 1) },
+        realtime_drying_temp: { unit: '℃', value: Mock.Random.natural(0, 80) },
+        realtime_spray_speed: { unit: 'm/s', value: Mock.Random.float(0, 1.5, 1, 1) },
+      }
+      break
   }
-})
 
-/* ======== 2. 实时设备 ======== */
-const realtimeDevices = []
-TYPES.forEach(type => {
-  const count = Mock.mock('@integer(2,4)') // 每类 2~4 台
-  for (let i = 1; i <= count; i++) {
-    const base = {
-      device_id: `${type}-${i.toString().padStart(2, '0')}`,
-      device_name: `${type}${i}号`,
-      type,
-      status: Mock.Random.pick(STATUS),
-      collection_time: Mock.Random.datetime('yyyy-MM-dd HH:mm:ss')
-    }
-    switch (type) {
-      case '注塑机':
-        base.data = {
-          温度: `${Mock.mock('@integer(180,230)')}℃`,
-          压力: `${Mock.mock('@float(110,130,1,1)')} MPa`,
-          速度: `${Mock.mock('@integer(75,85)')} mm/s`
-        }
-        break
-      case '喷漆机':
-        base.data = {
-          压力: `${Mock.mock('@float(0.4,0.6,1,2)')} MPa`,
-          距离: `${Mock.mock('@integer(190,210)')} mm`,
-          温度: `${Mock.mock('@integer(65,75)')}°C`
-        }
-        break
-      case '丝印机':
-        base.data = {
-          压力: `${Mock.mock('@float(0.5,0.7,1,2)')} MPa`,
-          速度: `${Mock.mock('@float(0.9,1.1,1,1)')} m/s`,
-          粘度: `${Mock.mock('@float(11,14,1,1)')} Pa·s`
-        }
-        break
-      case '烫金机':
-        base.data = {
-          温度: `${Mock.mock('@integer(160,200)')}°C`,
-          压力: `${Mock.mock('@float(1.5,2.0,1,1)')} MPa`,
-          时间: `${Mock.mock('@float(1.0,2.0,1,1)')} s`
-        }
-        break
-    }
-    realtimeDevices.push(base)
-  }
-})
-
-/* ======== 3. 报警记录 ======== */
-const alarms = Mock.mock({
-  'list|8-12': [{
-    alarm_id: '@id',
-    alarm_code: /AL\d{3}/,
-    alarm_detail: '@cparagraph(1)',
-    alarm_level: () => Mock.Random.pick(LEVELS),
-    alarm_time: '@datetime'
-  }]
-}).list
-
-/* ======== 4. 设备状态（可合并到 realtime） ======== */
-const deviceStatus = realtimeDevices.reduce((acc, cur) => {
-  acc[cur.device_id] = cur.status
-  return acc
-}, {})
-
-/* ======== 5. 生产数据（分页） ======== */
-const productionData = (params = {}) => {
-  const page = Number(params.page) || 1
-  const page_size = Number(params.page_size) || 10
-  const total = 50
-  const list = Mock.mock({
-    [`list|${page_size}`]: [{
-      id: '@id',
-      device_name: '@pick(TYPES)@integer(1,4)号',
-      product_code: /P[A-Z]\d{4}/,
-      plan_qty: '@integer(1000,2000)',
-      actual_qty: '@integer(800,2200)',
-      pass_rate: '@float(85,99,1,1)',
-      start_time: '@datetime',
-      end_time: '@datetime'
-    }]
-  }).list
   return {
-    list,
-    total,
-    page,
-    page_size,
-    total_pages: Math.ceil(total / page_size)
+    realtime_id: Mock.Random.guid(),
+    realtime_status: {
+      running: Mock.Random.boolean(),
+      power_on: true,
+      cycle_count: Mock.Random.natural(0, 100),
+      device_ready: true,
+      stamping_done: Mock.Random.boolean(),
+      emergency_stop: false,
+      preparation_done: Mock.Random.boolean(),
+      production_stage: Mock.Random.natural(0, 5),
+      production_stage_desc: Mock.Random.pick(['STANDBY', 'PREPARING', 'RUNNING', 'PAUSED', 'FINISHED', 'ERROR']),
+    },
+    realtime_details: realtime_details,
+    collection_time: dayjs()
+      .subtract(Mock.Random.natural(0, 60), 'minute')
+      .toISOString()
+      .replace(/\.\d+Z$/, ''), // ISO 8601 without milliseconds
+    equipment_name: equipment_name,
+    equipment_id: equipment_id,
+    equipment_type: equipment_type,
+    timestamp: dayjs()
+      .toISOString()
+      .replace(/\.\d+Z$/, ''), // ISO 8601 without milliseconds
   }
 }
 
-/* ========= Mock 规则 ========= */
-Mock.mock('/monitoring/process-parameters', 'get', () => ({ code: 200, data: processParams }))
-Mock.mock('/monitoring/realtime', 'get', () => ({ code: 200, data: realtimeDevices }))
-Mock.mock('/monitoring/alarms', 'get', () => ({ code: 200, data: alarms }))
-Mock.mock('/monitoring/device-status', 'get', () => ({ code: 200, data: deviceStatus }))
-Mock.mock(/\/monitoring\/production-data/, 'get', ({ url }) => {
-  const params = Object.fromEntries(new URL('http://localhost' + url).searchParams.entries())
-  return { code: 200, data: productionData(params) }
+// 模拟报警记录
+const alarmLevels = ['严重', '警告', '致命']
+const alarmStatuses = ['已处理', '未处理']
+const alarmSourceTypes = ['网络模块', '温度传感器', '电力监测单元', '机械故障']
+const alarmCodes = ['NET_DOWN', 'TEMP_OVER', 'VOLTAGE_FLUCT', 'MECHANICAL_FAIL']
+const alarmDetails = {
+  NET_DOWN: '设备连续5分钟无心跳信号',
+  TEMP_OVER: '电机温度超过安全阈值(85℃)',
+  VOLTAGE_FLUCT: '输入电压波动超过±10%',
+  MECHANICAL_FAIL: '设备部件磨损严重，需要维护',
+}
+
+const generateAlarm = () => {
+  const alarmCode = Mock.Random.pick(alarmCodes)
+  return {
+    alarm_id: Mock.Random.guid(),
+    alarm_source_type: Mock.Random.pick(alarmSourceTypes),
+    associated_record_id: Mock.Random.guid(),
+    alarm_code: alarmCode,
+    alarm_level: Mock.Random.pick(alarmLevels),
+    alarm_detail: alarmDetails[alarmCode],
+    alarm_time: dayjs()
+      .subtract(Mock.Random.natural(0, 7), 'day')
+      .toISOString()
+      .replace(/\.\d+Z$/, ''),
+    alarm_status: Mock.Random.pick(alarmStatuses),
+    created_at: dayjs()
+      .subtract(Mock.Random.natural(0, 7), 'day')
+      .toISOString()
+      .replace(/\.\d+Z$/, ''),
+    updated_at: dayjs()
+      .toISOString()
+      .replace(/\.\d+Z$/, ''),
+    equipment_name: Mock.Random.pick(['烫金机一号', '注塑机一号', '喷漆机一号', '丝印机一号']),
+  }
+}
+
+const alarmData = Mock.mock({
+  'Alarms|20-50': [generateAlarm],
+}).Alarms
+
+// 模拟设备运行状况
+const equipmentStatusTypes = {
+  hot_stamping: '烫金机',
+  injection_molding: '注塑机',
+  spray_painting: '喷漆机',
+  screen_printing: '丝印机',
+}
+const equipmentStatuses = ['OFF', 'ON_IDLE', 'ON_RUNNING']
+
+const allEquipmentStatusData = []
+for (const type in equipmentStatusTypes) {
+  for (let i = 1; i <= Mock.Random.natural(3, 5); i++) {
+    allEquipmentStatusData.push({
+      equipment_id: Mock.Random.guid(),
+      equipment_name: `${equipmentStatusTypes[type]}${i}号`,
+      equipment_type: type,
+      equipment_status: Mock.Random.pick(equipmentStatuses),
+      location: Mock.Random.pick(['生产区域A', '生产区域B', '生产区域C', '生产区域D']),
+    })
+  }
+}
+
+// Store real-time data for each equipment ID
+const realtimeDataStore = {}
+allEquipmentStatusData.forEach((eq) => {
+  realtimeDataStore[eq.equipment_id] = generateRealtimeData(eq.equipment_type, eq.equipment_id, eq.equipment_name)
 })
 
-export default Mock
+// WebSocket 模拟
+setInterval(() => {
+  allEquipmentStatusData.forEach((equipment) => {
+    // 生成新的实时数据
+    const newData = generateRealtimeData(
+      equipment.equipment_type,
+      equipment.equipment_id,
+      equipment.equipment_name
+    )
+    // 更新存储的数据
+    realtimeDataStore[equipment.equipment_id] = newData
+  })
+}, 10000) // 每10秒更新一次数据，模拟实时推送
+
+// GET 获取设备最晚实时数据接口
+Mock.mock(/\/api\/productionMonitor\/getLastRealtimeData/, 'get', ({ url }) => {
+  const u = new URL('http://localhost' + url)
+  const equipment_id = u.searchParams.get('equipment_id')
+
+  const data = realtimeDataStore[equipment_id]
+  if (data) {
+    // Update timestamp and collection_time to simulate real-time updates
+    data.timestamp = dayjs()
+      .toISOString()
+      .replace(/\.\d+Z$/, '')
+    data.collection_time = dayjs()
+      .toISOString()
+      .replace(/\.\d+Z$/, '')
+    return {
+      code: 200,
+      msg: '获取成功',
+      data: data,
+    }
+  } else {
+    return {
+      code: 404,
+      msg: '设备实时数据不存在',
+      data: null,
+    }
+  }
+})
+
+// GET 获取报警记录列表接口
+Mock.mock(/\/api\/productionMonitor\/getAlarmList/, 'get', ({ url }) => {
+  const u = new URL('http://localhost' + url)
+  const page = Number(u.searchParams.get('page') || 1)
+  const page_size = Number(u.searchParams.get('page_size') || 10)
+
+  const start = (page - 1) * page_size
+  const end = start + page_size
+  const list = alarmData.slice(start, end)
+
+  return {
+    code: 200,
+    msg: '获取报警记录列表成功',
+    data: {
+      Alarms: list,
+      pagination: {
+        total: alarmData.length,
+        page,
+        page_size,
+        total_pages: Math.ceil(alarmData.length / page_size),
+      },
+    },
+  }
+})
+
+// GET 根据id获取报警记录信息接口
+Mock.mock(/\/api\/productionMonitor\/getAlarmById/, 'get', ({ url }) => {
+  const u = new URL('http://localhost' + url)
+  const alarm_id = u.searchParams.get('alarm_id')
+  const alarm = alarmData.find((a) => a.alarm_id === alarm_id)
+
+  if (alarm) {
+    return {
+      code: 200,
+      msg: '获取报警记录成功',
+      data: alarm,
+    }
+  } else {
+    return {
+      code: 404,
+      msg: '报警记录不存在',
+      data: null,
+    }
+  }
+})
+
+// DEL 删除报警记录接口
+Mock.mock(/\/api\/productionMonitor\/deleteAlarm/, 'delete', ({ url }) => {
+  const u = new URL('http://localhost' + url)
+  const alarm_id = u.searchParams.get('alarm_id')
+  const index = alarmData.findIndex((a) => a.alarm_id === alarm_id)
+
+  if (index > -1) {
+    alarmData.splice(index, 1)
+    return {
+      code: 200,
+      msg: `成功删除id为'${alarm_id}'的报警记录`,
+      data: true,
+    }
+  } else {
+    return {
+      code: 404,
+      msg: '报警记录不存在',
+      data: false,
+    }
+  }
+})
+
+// PATCH 更新报警记录级别
+Mock.mock(/\/api\/productionMonitor\/updateAlarmLevel/, 'patch', ({ url }) => {
+  const u = new URL('http://localhost' + url)
+  const alarm_id = u.searchParams.get('alarm_id')
+  const level = u.searchParams.get('level')
+
+  const alarm = alarmData.find((a) => a.alarm_id === alarm_id)
+
+  if (alarm) {
+    alarm.alarm_level = level
+    alarm.updated_at = dayjs()
+      .toISOString()
+      .replace(/\.\d+Z$/, '')
+    return {
+      code: 200,
+      msg: `更新id为${alarm_id}的报警记录级别为${level}`,
+      data: alarm,
+    }
+  } else {
+    return {
+      code: 404,
+      msg: '报警记录不存在',
+      data: null,
+    }
+  }
+})
+
+// PATCH 更新报警记录状态
+Mock.mock(/\/api\/productionMonitor\/updateAlarmStatus/, 'patch', ({ url }) => {
+  const u = new URL('http://localhost' + url)
+  const alarm_id = u.searchParams.get('alarm_id')
+  const status = u.searchParams.get('status')
+
+  const alarm = alarmData.find((a) => a.alarm_id === alarm_id)
+
+  if (alarm) {
+    alarm.alarm_status = status
+    alarm.updated_at = dayjs()
+      .toISOString()
+      .replace(/\.\d+Z$/, '')
+    return {
+      code: 200,
+      msg: `更新id为${alarm_id}的报警记录状态为${status}`,
+      data: alarm,
+    }
+  } else {
+    return {
+      code: 404,
+      msg: '报警记录不存在',
+      data: null,
+    }
+  }
+})
+
+// GET 根据设备类型获取设备运行状况接口
+Mock.mock(/\/api\/productionMonitor\/getEquipmentStatusByType/, 'get', ({ url }) => {
+  const u = new URL('http://localhost' + url)
+  const equipment_type = u.searchParams.get('equipment_type')
+
+  let filteredData = [...allEquipmentStatusData]
+  if (equipment_type !== 'all') {
+    filteredData = filteredData.filter((item) => item.equipment_type === equipment_type)
+  }
+
+  return {
+    code: 200,
+    msg: '获取成功',
+    data: filteredData,
+  }
+})
+
+console.log('[Mock] 生产监控接口已启动！')

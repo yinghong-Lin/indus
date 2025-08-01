@@ -4,13 +4,14 @@ import { userAPI } from "../api/user"
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null,
-    token: localStorage.getItem("token"),
-    refreshToken: localStorage.getItem("refreshToken"),
+    access_token: localStorage.getItem("access_token"), // 注意这里的拼写
+    refresh_token: localStorage.getItem("refresh_token"),
     isLoading: false,
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.token,
+    // 修正 getter 以使用正确的 token 变量名
+    isAuthenticated: (state) => !!state.access_token,
     userRole: (state) => state.user?.role || "user",
   },
 
@@ -19,12 +20,18 @@ export const useAuthStore = defineStore("auth", {
       this.isLoading = true
       try {
         const response = await userAPI.login(credentials)
-        this.user = response.user
-        this.token = response.token
-        this.refreshToken = response.refreshToken
+        // 确保从响应中获取正确的字段
+        const user = response.data.user
+        const access_token = response.data.access_token
+        const refresh_token = response.data.refresh_token
 
-        localStorage.setItem("token", response.token)
-        localStorage.setItem("refreshToken", response.refreshToken)
+        this.user = user
+        this.accsee_token = access_token // 使用正确的变量名
+        this.refresh_token = refresh_token
+
+        localStorage.setItem("user", JSON.stringify(user)) // 存储对象需要序列化
+        localStorage.setItem("accsee_token", access_token)
+        localStorage.setItem("refresh_token", refresh_token)
 
         return { success: true }
       } catch (error) {
@@ -46,20 +53,23 @@ export const useAuthStore = defineStore("auth", {
         console.error("Logout error:", error)
       } finally {
         this.user = null
-        this.token = null
-        this.refreshToken = null
-        localStorage.removeItem("token")
-        localStorage.removeItem("refreshToken")
+        this.access_token = null
+        this.refresh_token = null
+
+        localStorage.removeItem("user")
+        localStorage.removeItem("access_token")
+        localStorage.removeItem("refresh_token")
       }
     },
 
     async refreshTokenAction() {
-      if (!this.refreshToken) return false
+      if (!this.refresh_token) return false
 
       try {
-        const response = await userAPI.refreshToken(this.refreshToken)
-        this.token = response.token
-        localStorage.setItem("token", response.token)
+        const response = await userAPI.refreshToken(this.refresh_token)
+        this.access_token = response.access_token
+        // 修正 localStorage.setItem 的键名
+        localStorage.setItem("access_token", response.access_token)
         return true
       } catch (error) {
         this.logout()
@@ -68,7 +78,7 @@ export const useAuthStore = defineStore("auth", {
     },
 
     async getCurrentUser() {
-      if (!this.token) return
+      if (!this.access_token) return
 
       try {
         const user = await userAPI.getCurrentUser()

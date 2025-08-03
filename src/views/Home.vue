@@ -207,7 +207,7 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="parameterDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="saveProcessParameters">保存参数</el-button>
+          <el-button type="primary" @click="saveProcessParameters">关闭</el-button>
         </div>
       </template>
     </el-dialog>
@@ -382,9 +382,8 @@ const showProcessParameterDialog = async (processType) => {
 }
 
 const saveProcessParameters = () => {
-  if (!selectedProcessType.value) return
-
-  ElMessage.success(`${getTypeName(selectedProcessType.value)}参数设置成功，所有设备参数已更新`)
+  // if (!selectedProcessType.value) return
+  // ElMessage.success(`${getTypeName(selectedProcessType.value)}参数设置成功，所有设备参数已更新`)
   parameterDialogVisible.value = false
 }
 

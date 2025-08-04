@@ -77,14 +77,7 @@ export const useAuthStore = defineStore("auth", {
 
     async getCurrentUser() {
       if (!this.access_token) return
-
-      try {
-        const user = await userAPI.getCurrentUser()
-        this.user = user
-      } catch (error) {
-        console.error("Get current user error:", error)
-        this.logout()
-      }
+      this.logout()
     },
   },
 })

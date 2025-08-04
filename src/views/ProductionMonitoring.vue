@@ -141,13 +141,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue' // 导入 onUnmounted
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh, Download } from '@element-plus/icons-vue'
 import { monitoringAPI } from '../api/monitoring'
 import dayjs from 'dayjs'
-import { websocketService } from '../services/websocket' // 导入 WebSocket 服务
-import { useAuthStore } from '../stores/auth' // 导入 auth store
+import { websocketService } from '../services/websocket'
+import { useAuthStore } from '../stores/auth'
 
 /* ---------- 响应式状态 ---------- */
 const loading = ref(false)
@@ -177,8 +177,6 @@ const statusNameMap = {
   OFF: '已停机',
   ON_IDLE: '空闲中',
   ON_RUNNING: '运行中',
-  // FAULT: '故障',
-  // MAINTAIN: '维护中'
 }
 
 /* ---------- 计算属性 ---------- */
@@ -193,8 +191,6 @@ const equipmentTypeSummaries = computed(() => {
         running_count: 0,
         off_count: 0,
         idle_count: 0,
-        // fault_count: 0,
-        // maintain_count: 0,
       }
     }
     typesMap[type].total_count++
@@ -205,11 +201,6 @@ const equipmentTypeSummaries = computed(() => {
     } else if (eq.equipment_status === 'ON_IDLE') {
       typesMap[type].idle_count++
     }
-    //  else if (eq.equipment_status === 'FAULT') {
-    //   typesMap[type].fault_count++;
-    // } else if (eq.equipment_status === 'MAINTAIN') {
-    //   typesMap[type].maintain_count++;
-    // }
   })
   return Object.values(typesMap)
 })
@@ -246,8 +237,6 @@ const getStatusTagType = (status) => {
     ON_RUNNING: 'success',
     OFF: 'info',
     ON_IDLE: 'info',
-    // FAULT: 'danger',
-    // MAINTAIN: 'warning'
   }
   return statusMap[status] || 'info'
 }
@@ -481,8 +470,20 @@ const handleRealtimeCurrentChange = (val) => {
 
 /* ---------- 生命周期钩子 ---------- */
 let realtimeDataInterval = null
-let ws = null
 const authStore = useAuthStore()
+
+// WebSocket message handler
+const handleWebSocketMessage = (realtimeData) => {
+  // Update the specific equipment's realtime data in allRealtimeDetails
+  const index = allRealtimeDetails.value.findIndex(
+    (item) => item.equipment_id === realtimeData.equipment_id
+  )
+  if (index !== -1) {
+    allRealtimeDetails.value[index] = realtimeData
+  } else {
+    allRealtimeDetails.value.push(realtimeData)
+  }
+}
 
 onMounted(async () => {
   await refreshData()
@@ -490,41 +491,32 @@ onMounted(async () => {
   // Set up interval for fetching realtime data for the active type
   realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 5000) // Fetch every 5 seconds
 
-  // Initialize WebSocket connection
-  if (authStore.isAuthenticated && authStore.access_token) {
-    ws = websocketService.connect(authStore.access_token)
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      if (data.code === 200 && data.data) {
-        const receivedRealtimeData = data.data
-        // Update the specific equipment's realtime data in allRealtimeDetails
-        const index = allRealtimeDetails.value.findIndex(
-          (item) => item.equipment_id === receivedRealtimeData.equipment_id
-        )
-        if (index !== -1) {
-          allRealtimeDetails.value[index] = receivedRealtimeData
-        } else {
-          allRealtimeDetails.value.push(receivedRealtimeData)
-        }
-      }
-    }
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error)
-      ElMessage.error('WebSocket连接错误')
-    }
-    ws.onclose = () => {
-      console.log('WebSocket连接已关闭')
-    }
+  // Initialize WebSocket connection and set up message handler
+  if (authStore.isAuthenticated) {
+    // Start monitoring the WebSocket connections when the component mounts
+    websocketService.startMonitoring(
+      allEquipmentStatus.value.map(eq => eq.equipment_id),
+      handleWebSocketMessage
+    )
   }
+
+  // Watch for changes in equipment status to update WebSocket connections
+  watch(allEquipmentStatus, (newStatus, oldStatus) => {
+    if (newStatus !== oldStatus && authStore.isAuthenticated) {
+      websocketService.startMonitoring(
+        newStatus.map(eq => eq.equipment_id),
+        handleWebSocketMessage
+      )
+    }
+  }, { deep: true })
 })
 
 onUnmounted(() => {
   if (realtimeDataInterval) {
     clearInterval(realtimeDataInterval)
   }
-  if (ws) {
-    websocketService.disconnect()
-  }
+  // Stop all WebSocket connections when component is unmounted
+  websocketService.stopAllMonitoring()
 })
 
 // Watch for activeType changes to refetch realtime data for the new type

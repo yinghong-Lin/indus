@@ -91,7 +91,7 @@
         </el-table-column>
         <el-table-column prop="equipment_name" label="设备名称" width="150" />
         <el-table-column prop="alarm_code" label="代码" width="150" />
-        <el-table-column prop="alarm_detail" label="详情" width="500"/>
+        <el-table-column prop="alarm_detail" label="详情" width="400"/>
         <el-table-column prop="alarm_level" label="级别" width="100">
           <template #default="scope">
             <el-tag :type="alarmLevelTag(scope.row.alarm_level)">

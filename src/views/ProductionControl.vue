@@ -53,7 +53,7 @@
     <el-card class="table-card">
       <el-table :data="tableData" v-loading="loading" stripe class="equipment-table">
         <el-table-column prop="equipment_name" label="设备名称" width="200" />
-        <el-table-column prop="equipment_type" label="设备类型" min-width="120">
+        <el-table-column prop="equipment_type" label="设备类型" width="120">
           <template #default="{ row }">
             <el-tag :type="getTypeTagType(row.equipment_type)" size="small">
               {{ getTypeName(row.equipment_type) }}
@@ -68,7 +68,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="location" label="设备位置" width="150" />
-        <el-table-column label="关键参数" width="300">
+        <el-table-column label="关键参数" width="200">
           <template #default="{ row }">
             <div class="key-params">
               <div v-for="(param, key) in getKeyParams(row)" :key="key" class="param-item">
@@ -78,12 +78,12 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="updated_at" label="更新时间" width="180">
+        <el-table-column prop="updated_at" label="更新时间" width="120">
           <template #default="{ row }">
             {{ formatDateTime(row.updated_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="300" fixed="right">
+        <el-table-column label="操作" min-width="300">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button size="small" @click="openEditDialog(row)">编辑</el-button>

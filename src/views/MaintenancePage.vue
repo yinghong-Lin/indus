@@ -63,7 +63,7 @@
           </template>
         </el-table-column>
         <!-- 故障列表操作列 -->
-<el-table-column label="操作" width="230" fixed="right">
+<el-table-column label="操作" width="230" >
   <template #default="scope">
     <el-button size="small" type="text" @click="editFault(scope.row)">
       编辑
@@ -102,7 +102,7 @@
         </el-table-column>
         <el-table-column prop="maintenance_measures" label="措施" min-width="180" show-overflow-tooltip />
        <!-- 维修记录操作列 -->
-<el-table-column label="操作" width="200" fixed="right">
+<el-table-column label="操作" width="200">
   <template #default="scope">
     <el-button size="small" type="text" @click="editMaintenance(scope.row)">
       编辑

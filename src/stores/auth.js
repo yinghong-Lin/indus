@@ -1,18 +1,18 @@
-import { defineStore } from "pinia"
-import { userAPI } from "../api/user"
+import { defineStore } from 'pinia'
+import { userAPI } from '../api/user'
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
     user: null,
-    access_token: localStorage.getItem("access_token"), // 注意这里的拼写
+    access_token: localStorage.getItem("access_token"),
     refresh_token: localStorage.getItem("refresh_token"),
     isLoading: false,
   }),
 
   getters: {
-    // 修正 getter 以使用正确的 token 变量名
     isAuthenticated: (state) => !!state.access_token,
     userRole: (state) => state.user?.role || "user",
+    username: (state) => state.user?.user_name || "", // 添加用户名 getter
   },
 
   actions: {
@@ -20,17 +20,16 @@ export const useAuthStore = defineStore("auth", {
       this.isLoading = true
       try {
         const response = await userAPI.login(credentials)
-        // 确保从响应中获取正确的字段
         const user = response.data.user
         const access_token = response.data.access_token
         const refresh_token = response.data.refresh_token
 
         this.user = user
-        this.accsee_token = access_token // 使用正确的变量名
+        this.access_token = access_token
         this.refresh_token = refresh_token
 
-        localStorage.setItem("user", JSON.stringify(user)) // 存储对象需要序列化
-        localStorage.setItem("accsee_token", access_token)
+        localStorage.setItem("user", JSON.stringify(user))
+        localStorage.setItem("access_token", access_token)
         localStorage.setItem("refresh_token", refresh_token)
 
         return { success: true }
@@ -68,7 +67,6 @@ export const useAuthStore = defineStore("auth", {
       try {
         const response = await userAPI.refreshToken(this.refresh_token)
         this.access_token = response.access_token
-        // 修正 localStorage.setItem 的键名
         localStorage.setItem("access_token", response.access_token)
         return true
       } catch (error) {

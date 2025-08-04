@@ -32,7 +32,7 @@
           </el-icon>
           <span>生产监控</span>
         </el-menu-item>
-        
+
         <el-menu-item index="/control">
           <el-icon>
             <Setting />
@@ -40,7 +40,7 @@
           <span>生产控制</span>
         </el-menu-item>
 
-      <el-menu-item index="/maintenance">
+        <el-menu-item index="/maintenance">
           <el-icon>
             <Setting />
           </el-icon>
@@ -86,16 +86,15 @@
           </el-badge>
 
           <!-- 用户菜单 -->
-          
-            <div class="user-info">
-              <el-avatar :size="32" :src="userAvatar">
-                <el-icon>
-                  <User />
-                </el-icon>
-              </el-avatar>
-              <span class="username">{{ authStore.user?.name || '用户' }}</span>
-              </div>
-              <el-button type="primary" @click="logout">退出登录</el-button>
+          <div class="user-info">
+            <el-avatar :size="32" :src="userAvatar">
+              <el-icon>
+                <User />
+              </el-icon>
+            </el-avatar>
+            <span class="username">{{ authStore.user?.user_name }}</span>
+          </div>
+          <el-button type="primary" @click="logout">退出登录</el-button>
         </div>
       </el-header>
 

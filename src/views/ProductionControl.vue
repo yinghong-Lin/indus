@@ -86,27 +86,7 @@
         <el-table-column label="操作" width="300" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-button 
-                v-if="row.equipment_status === 'OFF'" 
-                size="small"
-                type="success" 
-                @click="toggleEquipmentStatus(row)"
-                :loading="row.statusLoading">
-                  启动
-              </el-button>
-              <el-button 
-                v-if="row.equipment_status === 'ON_RUNNING'" 
-                size="small"
-                type="warning" 
-                @click="toggleEquipmentStatus(row)"
-                :loading="row.statusLoading">
-                  停机
-              </el-button>
-              <el-button v-if="row.equipment_status === 'ON_IDLE'" size="small" disabled>
-                已停机
-              </el-button>
-              <!-- <el-button size="small" @click="openEditDialog(row)">编辑</el-button> -->
-              <el-button size="small" type="info" @click="openParamDialog(row)">设置</el-button>
+              <el-button size="small" @click="openEditDialog(row)">编辑</el-button>
               <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
             </div>
           </template>
@@ -121,7 +101,7 @@
       </div>
     </el-card>
 
-    <!-- 新增弹窗 -->
+    <!-- 新增/编辑弹窗 -->
     <el-dialog :title="dialogTitle" v-model="dialogVisible" width="900px" :close-on-click-modal="false">
       <el-form :model="equipmentForm" :rules="equipmentRules" ref="equipmentFormRef" label-width="120px">
         <el-row :gutter="16">
@@ -147,6 +127,15 @@
           <el-input v-model="equipmentForm.location" placeholder="请输入设备位置" />
         </el-form-item>
 
+        <!-- 编辑时显示设备状态 -->
+        <el-form-item v-if="equipmentForm.equipment_id" label="设备状态" prop="equipment_status">
+          <el-select v-model="equipmentForm.equipment_status" placeholder="请选择设备状态" class="full-width">
+            <el-option label="运行中" value="ON_RUNNING" />
+            <el-option label="空闲中" value="OFF" />
+            <el-option label="已停机" value="ON_IDLE" />
+          </el-select>
+        </el-form-item>
+
         <!-- 设置参数 -->
         <el-divider content-position="left">设置参数</el-divider>
         <DynamicSetting v-if="equipmentForm.setting_details"
@@ -163,27 +152,6 @@
         <el-button type="primary" @click="submitEquipmentForm" :loading="submitLoading">
           {{ equipmentForm.equipment_id ? '更新' : '新增' }}
         </el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 参数设置弹窗 -->
-    <el-dialog title="设备参数设置" v-model="paramDialogVisible" width="800px" :close-on-click-modal="false">
-      <el-tabs v-model="activeTab">
-        <el-tab-pane label="运行参数" name="setting">
-          <DynamicSetting v-model="paramForm.setting_details" :type="paramForm.equipment_type" />
-        </el-tab-pane>
-        <el-tab-pane label="设备规格" name="spec">
-          <DynamicSpec v-model="paramForm.spec_details" :type="paramForm.equipment_type" />
-        </el-tab-pane>
-      </el-tabs>
-
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="paramDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitParamForm" :loading="paramSubmitLoading">
-            保存参数
-          </el-button>
-        </div>
       </template>
     </el-dialog>
   </div>
@@ -215,7 +183,6 @@ const statusNameMap = {
 // 响应式数据
 const loading = ref(false)
 const submitLoading = ref(false)
-const paramSubmitLoading = ref(false)
 const tableData = ref([])
 
 const queryParams = reactive({
@@ -229,19 +196,23 @@ const pagination = reactive({
 })
 
 const dialogVisible = ref(false)
-const paramDialogVisible = ref(false)
-const activeTab = ref('setting')
 const equipmentForm = ref({})
-const paramForm = ref({})
 const equipmentFormRef = ref()
 
-const equipmentRules = {
-  equipment_name: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
-  equipment_type: [{ required: true, message: '请选择设备类型', trigger: 'change' }],
-  location: [{ required: true, message: '请输入设备位置', trigger: 'blur' }]
-}
+// 根据是否是编辑状态动态调整验证规则
+const equipmentRules = computed(() => {
+  return {
+    equipment_name: [{ required: true, message: '请输入设备名称', trigger: 'blur' }],
+    equipment_type: [{ required: true, message: '请选择设备类型', trigger: 'change' }],
+    location: [{ required: true, message: '请输入设备位置', trigger: 'blur' }],
+    // 编辑时才需要验证设备状态
+    equipment_status: equipmentForm.value.equipment_id
+      ? [{ required: true, message: '请选择设备状态', trigger: 'change' }]
+      : []
+  }
+})
 
-const dialogTitle = computed(() => (equipmentForm.value.equipment_id ? '编辑设备' : '新增设备'))
+const dialogTitle = computed(() => equipmentForm.value.equipment_id ? '编辑设备' : '新增设备')
 
 // 工具函数
 const getTypeName = (type) => typeNameMap[type] || type
@@ -296,7 +267,7 @@ const getKeyParams = (row) => {
   return list.filter(i => i.value !== undefined)
 }
 
-// 列表获取 - 修正API调用
+// 列表获取
 const fetchEquipmentList = async () => {
   loading.value = true
   try {
@@ -305,30 +276,19 @@ const fetchEquipmentList = async () => {
       page_size: pagination.page_size
     }
 
-    // 根据是否有搜索条件选择不同的API
     let response
     if (queryParams.keyword || queryParams.equipment_type !== 'all') {
-      // 有搜索条件时使用搜索接口
       response = await equipmentAPI.searchEquipment({
         ...params,
         keyword: queryParams.keyword,
         equipment_type: queryParams.equipment_type
       })
     } else {
-      // 无搜索条件时使用列表接口
       response = await equipmentAPI.getEquipmentList(params)
     }
 
     if (response.code === 200) {
       tableData.value = (response.data.equipments || []).map(item => ({ ...item, statusLoading: false }))
-
-      // 确保只有ON_RUNNING和OFF状态可以切换
-      tableData.value.forEach(item => {
-        if (item.equipment_status === 'ON_IDLE') {
-          item.statusLoading = false
-        }
-      })
-
       pagination.total = response.data.pagination.total
     } else {
       ElMessage.error(response.msg || '获取设备列表失败')
@@ -412,41 +372,44 @@ const generateDefaultSpecs = (type) => {
   switch (type) {
     case 'injection_molding':
       return {
+        spec_heating_temp: { min: 180, max: 280, unit: '℃' },
+        spec_cooling_time: { min: 5, max: 60, unit: 's' },
+        spec_injection_speed: { min: 0, max: 200, unit: 'mm/s' },
+        spec_injection_pressure: { min: 0, max: 180.0, unit: 'MPa' },
+        spec_injection_time: { min: 1, max: 10, unit: 's' },
+        spec_opening_time: { min: 1, max: 10, unit: 's' },
+        spec_closing_time: { min: 1, max: 10, unit: 's' },
+        spec_holding_pressure: { min: 0, max: 120.0, unit: 'MPa' },
+        spec_holding_time: { min: 1, max: 30, unit: 's' },
+        spec_injection_position: { min: 0.01, max: 0.1, unit: 'mm' },
+        spec_screw_speed: { min: 0, max: 300, unit: 'rpm' },
         spec_opening_stroke: { min: 0, max: 200, unit: 'mm' },
         spec_clamping_force: { min: 0, max: 1200, unit: 'kN' },
         spec_motor_power: { min: 0, max: 15.5, unit: 'kW' },
-        spec_heating_zone_count: { min: 0, max: 8, unit: '个' },
-        spec_heating_temp: { min: 180, max: 280, unit: '℃' },
-        spec_injection_speed: { min: 0, max: 200, unit: 'mm/s' },
-        spec_injection_pressure: { min: 0, max: 180, unit: 'MPa' },
-        spec_screw_speed: { min: 0, max: 300, unit: 'rpm' },
-        spec_holding_pressure: { min: 0, max: 120, unit: 'MPa' }
+        spec_heating_zone_count: { min: 0, max: 8, unit: '个' }
       }
     case 'screen_printing':
       return {
         spec_printing_pressure: { min: 0, max: 0.8, unit: 'MPa' },
         spec_printing_speed: { min: 0, max: 1.2, unit: 'm/s' },
-        spec_mesh_count: { min: 0, max: 300, unit: '目' },
-        spec_template_thickness: { min: 0, max: 0.3, unit: 'mm' },
-        spec_ink_viscosity: { min: 0, max: 15, unit: 'Pa·s' },
-        spec_uv_drying_power: { min: 0, max: 2000, unit: 'W' }
+        spec_ink_viscosity: { min: 0, max: 15.0, unit: 'Pa·s' },
+        spec_ink_drying_time: { min: 5, max: 120, unit: 's' }
       }
     case 'hot_stamping':
       return {
         spec_stamping_temp: { min: 0, max: 200, unit: '℃' },
         spec_stamping_pressure: { min: 0, max: 2.5, unit: 'MPa' },
-        spec_foil_speed_min: { min: 1, max: 10, unit: 'm/s' },
-        spec_foil_speed_max: { min: 1, max: 10, unit: 'm/s' },
+        spec_foil_speed: { min: 1, max: 10, unit: 'm/s' },
         spec_stamping_duration: { min: 0, max: 5, unit: 's' }
       }
     case 'spray_painting':
       return {
         spec_spray_pressure: { min: 0, max: 0.6, unit: 'MPa' },
-        spec_spray_distance_min: { min: 150, max: 300, unit: 'mm' },
-        spec_spray_distance_max: { min: 150, max: 300, unit: 'mm' },
+        spec_spray_distance: { min: 150, max: 300, unit: 'mm' },
         spec_spray_speed: { min: 0, max: 1.5, unit: 'm/s' },
         spec_drying_temp: { min: 0, max: 80, unit: '℃' },
-        spec_paint_viscosity: { min: 0, max: 25, unit: 'Pa·s' }
+        spec_paint_viscosity: { min: 0, max: 25.0, unit: 'Pa·s' },
+        spec_drying_time: { min: 10, max: 600, unit: 's' }
       }
     default:
       return {}
@@ -481,32 +444,14 @@ const openEditDialog = async (row) => {
   }
 }
 
-// 参数弹窗
-const openParamDialog = async (row) => {
-  try {
-    const res = await equipmentAPI.getEquipmentById(row.equipment_id)
-    if (res.code === 200) {
-      paramForm.value = res.data
-      paramDialogVisible.value = true
-    } else {
-      ElMessage.error(res.msg || '获取设备信息失败')
-    }
-  } catch (error) {
-    console.error('获取设备信息失败:', error)
-    El.Message.error('获取设备信息失败')
-  }
-}
-
 const submitEquipmentForm = async () => {
   try {
     await equipmentFormRef.value?.validate()
 
     submitLoading.value = true
 
-    // Deep copy payload to avoid directly modifying reactive object
     const payload = JSON.parse(JSON.stringify(equipmentForm.value))
 
-    // Ensure setting_details and spec_details are initialized if empty
     if (!payload.setting_details || Object.keys(payload.setting_details).length === 0) {
       payload.setting_details = generateDefaultSettings(payload.equipment_type)
     }
@@ -514,16 +459,14 @@ const submitEquipmentForm = async () => {
       payload.spec_details = generateDefaultSpecs(payload.equipment_type)
     }
 
-    // Ensure value fields in setting_details are numbers
     if (payload.setting_details) {
       for (const key in payload.setting_details) {
         if (payload.setting_details[key] && typeof payload.setting_details[key].value !== 'number') {
-          payload.setting_details[key].value = 0 // Default to 0 if not a number
+          payload.setting_details[key].value = 0
         }
       }
     }
 
-    // Ensure min/max fields in spec_details are numbers
     if (payload.spec_details) {
       for (const key in payload.spec_details) {
         if (payload.spec_details[key]) {
@@ -535,11 +478,6 @@ const submitEquipmentForm = async () => {
           }
         }
       }
-    }
-
-    // If it's an add operation, ensure equipment_status defaults to 'OFF'
-    if (!payload.equipment_id) {
-      payload.equipment_status = 'OFF'
     }
 
     const api = equipmentForm.value.equipment_id
@@ -556,7 +494,7 @@ const submitEquipmentForm = async () => {
       ElMessage.error(res.msg || '操作失败')
     }
   } catch (error) {
-    if (error !== false) { // 表单验证失败时不显示错误
+    if (error !== false) {
       console.error('提交失败:', error)
       ElMessage.error('操作失败，请检查输入信息')
     }
@@ -588,60 +526,9 @@ const handleDelete = async (row) => {
   }
 }
 
-const toggleEquipmentStatus = async (row) => {
-  // 确保只有ON_RUNNING和OFF状态可以切换
-  if (row.equipment_status === 'ON_IDLE') {
-    ElMessage.info('已停机状态无法切换')
-    return
-  }
-
-  const newStatus = row.equipment_status === 'ON_RUNNING' ? 'OFF' : 'ON_RUNNING'
-  row.statusLoading = true
-  try {
-    const res = await equipmentAPI.updateEquipmentRunStatus(row.equipment_id, newStatus)
-    if (res.code === 200) {
-      row.equipment_status = newStatus
-      ElMessage.success(res.msg || '状态切换成功')
-    } else {
-      ElMessage.error(res.msg || '状态切换失败')
-    }
-  } catch (error) {
-    console.error('状态切换失败:', error)
-    ElMessage.error('状态切换失败')
-  } finally {
-    row.statusLoading = false
-  }
-}
-
-const submitParamForm = async () => {
-  paramSubmitLoading.value = true
-  try {
-    const api = activeTab.value === 'setting'
-      ? equipmentAPI.updateEquipmentSetting
-      : equipmentAPI.updateEquipmentSpec
-    const res = await api(paramForm.value.equipment_id, {
-      equipment_type: paramForm.value.equipment_type,
-      [activeTab.value + '_details']: paramForm.value[activeTab.value + '_details']
-    })
-    if (res.code === 200) {
-      ElMessage.success(res.msg || '保存成功')
-      paramDialogVisible.value = false
-      fetchEquipmentList()
-    } else {
-      ElMessage.error(res.msg || '保存失败')
-    }
-  } catch (error) {
-    console.error('保存失败:', error)
-    ElMessage.error('保存失败')
-  } finally {
-    paramSubmitLoading.value = false
-  }
-}
-
 // 设备类型改变 → 填充默认参数
 const handleTypeChange = (type) => {
   if (!equipmentForm.value.equipment_id) {
-    // 新增时才重新生成默认参数
     equipmentForm.value.setting_details = generateDefaultSettings(type)
     equipmentForm.value.spec_details = generateDefaultSpecs(type)
   }
@@ -746,12 +633,6 @@ onMounted(() => {
   margin-top: 20px;
 }
 
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
 /* 响应式设计 */
 @media (max-width: 768px) {
   .production-control {
@@ -840,23 +721,5 @@ onMounted(() => {
 
 :deep(.el-select .el-input__wrapper) {
   background-color: rgba(255, 255, 255, 0.05);
-}
-
-:deep(.el-tabs__header) {
-  background: rgba(38, 38, 38, 0.5);
-  border-radius: 8px;
-  padding: 10px;
-}
-
-:deep(.el-tabs__nav-wrap::after) {
-  display: none;
-}
-
-:deep(.el-tabs__item) {
-  color: #888;
-}
-
-:deep(.el-tabs__item.is-active) {
-  color: #409EFF;
 }
 </style>

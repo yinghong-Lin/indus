@@ -84,6 +84,212 @@
           </el-form-item>
         </el-col>
       </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="冷却时间范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_cooling_time.min" 
+                :max="modelValue.spec_cooling_time.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_cooling_time.max" 
+                :min="modelValue.spec_cooling_time.min" 
+                :max="60" 
+                placeholder="最大值"
+              />
+              <span class="unit">s</span>
+            </div>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="注射速度范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_injection_speed.min" 
+                :max="modelValue.spec_injection_speed.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_injection_speed.max" 
+                :min="modelValue.spec_injection_speed.min" 
+                :max="200" 
+                placeholder="最大值"
+              />
+              <span class="unit">mm/s</span>
+            </div>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="注射时间范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_injection_time.min" 
+                :max="modelValue.spec_injection_time.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_injection_time.max" 
+                :min="modelValue.spec_injection_time.min" 
+                :max="10" 
+                placeholder="最大值"
+              />
+              <span class="unit">s</span>
+            </div>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="开模时间范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_opening_time.min" 
+                :max="modelValue.spec_opening_time.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_opening_time.max" 
+                :min="modelValue.spec_opening_time.min" 
+                :max="10" 
+                placeholder="最大值"
+              />
+              <span class="unit">s</span>
+            </div>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="合模时间范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_closing_time.min" 
+                :max="modelValue.spec_closing_time.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_closing_time.max" 
+                :min="modelValue.spec_closing_time.min" 
+                :max="10" 
+                placeholder="最大值"
+              />
+              <span class="unit">s</span>
+            </div>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="保压压力范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_holding_pressure.min" 
+                :max="modelValue.spec_holding_pressure.max" 
+                :precision="1" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_holding_pressure.max" 
+                :min="modelValue.spec_holding_pressure.min" 
+                :max="120" 
+                :precision="1" 
+                placeholder="最大值"
+              />
+              <span class="unit">MPa</span>
+            </div>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="保压时间范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_holding_time.min" 
+                :max="modelValue.spec_holding_time.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_holding_time.max" 
+                :min="modelValue.spec_holding_time.min" 
+                :max="30" 
+                placeholder="最大值"
+              />
+              <span class="unit">s</span>
+            </div>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="注射位置范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_injection_position.min" 
+                :max="modelValue.spec_injection_position.max" 
+                :precision="2" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_injection_position.max" 
+                :min="modelValue.spec_injection_position.min" 
+                :max="0.1" 
+                :precision="2" 
+                placeholder="最大值"
+              />
+              <span class="unit">mm</span>
+            </div>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="电机功率范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_motor_power.min" 
+                :max="modelValue.spec_motor_power.max" 
+                :precision="1" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_motor_power.max" 
+                :min="modelValue.spec_motor_power.min" 
+                :max="15.5" 
+                :precision="1" 
+                placeholder="最大值"
+              />
+              <span class="unit">kW</span>
+            </div>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="加热区数量范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_heating_zone_count.min" 
+                :max="modelValue.spec_heating_zone_count.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_heating_zone_count.max" 
+                :min="modelValue.spec_heating_zone_count.min" 
+                :max="8" 
+                placeholder="最大值"
+              />
+              <span class="unit">个</span>
+            </div>
+          </el-form-item>
+        </el-col>
+      </el-row>
     </template>
 
     <!-- 丝印机规格参数 -->
@@ -134,25 +340,6 @@
       </el-row>
       <el-row :gutter="16">
         <el-col :xs="24" :sm="12">
-          <el-form-item label="网目数范围">
-            <div class="range-input">
-              <el-input-number 
-                v-model="modelValue.spec_mesh_count.min" 
-                :max="modelValue.spec_mesh_count.max" 
-                placeholder="最小值"
-              />
-              <span class="range-separator">-</span>
-              <el-input-number 
-                v-model="modelValue.spec_mesh_count.max" 
-                :min="modelValue.spec_mesh_count.min" 
-                :max="300" 
-                placeholder="最大值"
-              />
-              <span class="unit">目</span>
-            </div>
-          </el-form-item>
-        </el-col>
-        <el-col :xs="24" :sm="12">
           <el-form-item label="油墨粘度范围">
             <div class="range-input">
               <el-input-number 
@@ -170,6 +357,25 @@
                 placeholder="最大值"
               />
               <span class="unit">Pa·s</span>
+            </div>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="油墨干燥时间范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_ink_drying_time.min" 
+                :max="modelValue.spec_ink_drying_time.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_ink_drying_time.max" 
+                :min="modelValue.spec_ink_drying_time.min" 
+                :max="120" 
+                placeholder="最大值"
+              />
+              <span class="unit">s</span>
             </div>
           </el-form-item>
         </el-col>
@@ -225,15 +431,15 @@
           <el-form-item label="金箔速度范围">
             <div class="range-input">
               <el-input-number 
-                v-model="modelValue.spec_foil_speed_min.min" 
-                :max="modelValue.spec_foil_speed_min.max" 
+                v-model="modelValue.spec_foil_speed.min" 
+                :max="modelValue.spec_foil_speed.max" 
                 :precision="1" 
                 placeholder="最小值"
               />
               <span class="range-separator">-</span>
               <el-input-number 
-                v-model="modelValue.spec_foil_speed_max.max" 
-                :min="modelValue.spec_foil_speed_min.min" 
+                v-model="modelValue.spec_foil_speed.max" 
+                :min="modelValue.spec_foil_speed.min" 
                 :max="10" 
                 :precision="1" 
                 placeholder="最大值"
@@ -294,14 +500,14 @@
           <el-form-item label="喷涂距离范围">
             <div class="range-input">
               <el-input-number 
-                v-model="modelValue.spec_spray_distance_min.min" 
-                :max="modelValue.spec_spray_distance_min.max" 
+                v-model="modelValue.spec_spray_distance.min" 
+                :max="modelValue.spec_spray_distance.max" 
                 placeholder="最小值"
               />
               <span class="range-separator">-</span>
               <el-input-number 
-                v-model="modelValue.spec_spray_distance_max.max" 
-                :min="modelValue.spec_spray_distance_min.min" 
+                v-model="modelValue.spec_spray_distance.max" 
+                :min="modelValue.spec_spray_distance.min" 
                 :max="300" 
                 placeholder="最大值"
               />
@@ -348,6 +554,48 @@
                 placeholder="最大值"
               />
               <span class="unit">℃</span>
+            </div>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="油漆粘度范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_paint_viscosity.min" 
+                :max="modelValue.spec_paint_viscosity.max" 
+                :precision="1" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_paint_viscosity.max" 
+                :min="modelValue.spec_paint_viscosity.min" 
+                :max="25" 
+                :precision="1" 
+                placeholder="最大值"
+              />
+              <span class="unit">Pa·s</span>
+            </div>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="干燥时间范围">
+            <div class="range-input">
+              <el-input-number 
+                v-model="modelValue.spec_drying_time.min" 
+                :max="modelValue.spec_drying_time.max" 
+                placeholder="最小值"
+              />
+              <span class="range-separator">-</span>
+              <el-input-number 
+                v-model="modelValue.spec_drying_time.max" 
+                :min="modelValue.spec_drying_time.min" 
+                :max="600" 
+                placeholder="最大值"
+              />
+              <span class="unit">s</span>
             </div>
           </el-form-item>
         </el-col>

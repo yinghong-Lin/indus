@@ -28,15 +28,21 @@ const generateInjectionMoldingSettings = () => ({
 
 // 生成注塑机规格参数
 const generateInjectionMoldingSpecs = () => ({
+  spec_heating_temp: { min: 180, max: 280, unit: "℃" },
+  spec_cooling_time: { min: 5, max: 60, unit: "s" },
+  spec_injection_speed: { min: 0, max: 200, unit: "mm/s" },
+  spec_injection_pressure: { min: 0, max: 180.0, unit: "MPa" },
+  spec_injection_time: { min: 1, max: 10, unit: "s" },
+  spec_opening_time: { min: 1, max: 10, unit: "s" },
+  spec_closing_time: { min: 1, max: 10, unit: "s" },
+  spec_holding_pressure: { min: 0, max: 120.0, unit: "MPa" },
+  spec_holding_time: { min: 1, max: 30, unit: "s" },
+  spec_injection_position: { min: 0.01, max: 0.1, unit: "mm" },
+  spec_screw_speed: { min: 0, max: 300, unit: "rpm" },
   spec_opening_stroke: { min: 0, max: 200, unit: "mm" },
   spec_clamping_force: { min: 0, max: 1200, unit: "kN" },
   spec_motor_power: { min: 0, max: 15.5, unit: "kW" },
   spec_heating_zone_count: { min: 0, max: 8, unit: "个" },
-  spec_heating_temp: { min: 180, max: 280, unit: "℃" },
-  spec_injection_speed: { min: 0, max: 200, unit: "mm/s" },
-  spec_injection_pressure: { min: 0, max: 180.0, unit: "MPa" },
-  spec_screw_speed: { min: 0, max: 300, unit: "rpm" },
-  spec_holding_pressure: { min: 0, max: 120.0, unit: "MPa" },
 })
 
 // 生成丝印机设置参数
@@ -51,10 +57,8 @@ const generateScreenPrintingSettings = () => ({
 const generateScreenPrintingSpecs = () => ({
   spec_printing_pressure: { min: 0, max: 0.8, unit: "MPa" },
   spec_printing_speed: { min: 0, max: 1.2, unit: "m/s" },
-  spec_mesh_count: { min: 0, max: 300, unit: "目" },
-  spec_template_thickness: { min: 0, max: 0.3, unit: "mm" },
   spec_ink_viscosity: { min: 0, max: 15.0, unit: "Pa·s" },
-  spec_uv_drying_power: { min: 0, max: 2000, unit: "W" },
+  spec_ink_drying_time: { min: 5, max: 120, unit: "s" },
 })
 
 // 生成烫金机设置参数
@@ -69,8 +73,7 @@ const generateHotStampingSettings = () => ({
 const generateHotStampingSpecs = () => ({
   spec_stamping_temp: { min: 0, max: 200, unit: "℃" },
   spec_stamping_pressure: { min: 0, max: 2.5, unit: "MPa" },
-  spec_foil_speed_min: { min: 1, max: 10, unit: "m/s" },
-  spec_foil_speed_max: { min: 1, max: 10, unit: "m/s" },
+  spec_foil_speed: { min: 1, max: 10, unit: "m/s" },
   spec_stamping_duration: { min: 0, max: 5, unit: "s" },
 })
 
@@ -87,11 +90,11 @@ const generateSprayPaintingSettings = () => ({
 // 生成喷漆机规格参数
 const generateSprayPaintingSpecs = () => ({
   spec_spray_pressure: { min: 0, max: 0.6, unit: "MPa" },
-  spec_spray_distance_min: { min: 150, max: 300, unit: "mm" },
-  spec_spray_distance_max: { min: 150, max: 300, unit: "mm" },
+  spec_spray_distance: { min: 150, max: 300, unit: "mm" },
   spec_spray_speed: { min: 0, max: 1.5, unit: "m/s" },
   spec_drying_temp: { min: 0, max: 80, unit: "℃" },
   spec_paint_viscosity: { min: 0, max: 25.0, unit: "Pa·s" },
+  spec_drying_time: { min: 10, max: 600, unit: "s" },
 })
 
 // 根据设备类型生成设置参数
@@ -226,7 +229,7 @@ Mock.mock(/\/api\/productionControl\/addEquipment/, "post", ({ body }) => {
 
     const newEquipment = {
       equipment_id: Mock.Random.guid(),
-      equipment_status: "OFF",
+      equipment_status: "OFF", // Default status for new equipment
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       ...data,
@@ -474,6 +477,42 @@ Mock.mock(/\/api\/productionControl\/searchEquipment/, "get", ({ url }) => {
       },
     },
   }
-})
+}),
+  // 单个设备添料接口
+  Mock.mock(/\/api\/productionControl\/singleDeviceAddSubstance/, "post", ({ url }) => {
+    const u = new URL("http://localhost" + url)
+    const equipment_id = u.searchParams.get("equipment_id")
+
+    const equipment = equipmentData.find((item) => item.equipment_id === equipment_id)
+
+    if (equipment) {
+      return {
+        code: 200,
+        msg: `已对设备'${equipment.equipment_name}'进行了添料操作`,
+        data: true,
+      }
+    } else {
+      return {
+        code: 404,
+        msg: "设备不存在",
+        data: null,
+      }
+    }
+  }),
+  // 所有设备添料接口
+  Mock.mock(/\/api\/productionControl\/allDeviceAddSubstance/, "post", () => {
+    const results = {}
+    let successCount = 0
+    equipmentData.forEach((equipment) => {
+      results[equipment.equipment_id] = true
+      successCount++
+    })
+
+    return {
+      code: 200,
+      msg: `已对所有设备进行了添料操作（成功：${successCount}台，失败：0台）`,
+      data: results,
+    }
+  })
 
 console.log("[Mock] 生产控制设备接口已启动！")

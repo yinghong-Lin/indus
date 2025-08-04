@@ -14,9 +14,9 @@ import "./style.css"
 dayjs.locale("zh-cn")
 
 // // ✅ 开发环境启用 mock
-// if (import.meta.env.DEV) {
-//   import("./mock")
-// }
+if (import.meta.env.DEV) {
+  import("./mock")
+}
 
 const app = createApp(App)
 const pinia = createPinia()

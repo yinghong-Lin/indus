@@ -101,6 +101,44 @@
           </el-form-item>
         </el-col>
       </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="开模时间">
+            <el-input-number 
+              v-model="modelValue.setting_opening_time.value" 
+              :min="0" 
+              :max="10" 
+              class="full-width"
+            />
+            <span class="unit">s</span>
+          </el-form-item>
+        </el-col>
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="合模时间">
+            <el-input-number 
+              v-model="modelValue.setting_closing_time.value" 
+              :min="0" 
+              :max="10" 
+              class="full-width"
+            />
+            <span class="unit">s</span>
+          </el-form-item>
+        </el-col>
+      </el-row>
+      <el-row :gutter="16">
+        <el-col :xs="24" :sm="12">
+          <el-form-item label="注射位置">
+            <el-input-number 
+              v-model="modelValue.setting_injection_position.value" 
+              :min="0" 
+              :max="0.1" 
+              :precision="2" 
+              class="full-width"
+            />
+            <span class="unit">mm</span>
+          </el-form-item>
+        </el-col>
+      </el-row>
     </template>
 
     <!-- 丝印机设置参数 -->

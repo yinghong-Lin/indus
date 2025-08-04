@@ -61,8 +61,8 @@ const authStore = useAuthStore()
 const loginFormRef = ref(null)
 
 const loginForm = reactive({
-  user_name: 'admin',
-  password: 'admin123'
+  user_name: '海绵宝宝',
+  password: '123456'
 })
 
 const loginRules = {
@@ -95,6 +95,7 @@ const handleLogin = async () => {
         localStorage.setItem('access_token', access_token)
         localStorage.setItem('refresh_token', refresh_token)
 
+        console.log(access_token)
         ElMessage.success('登录成功')
         router.push('/')
       } catch (error) {

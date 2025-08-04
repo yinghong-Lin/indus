@@ -7,8 +7,8 @@ Mock.mock("/api/user/login", "post", (options) => {
 
   // 模拟两个账号
   const users = [
-    { user_name: "admin", password: "admin123", role: "admin" },
-    { user_name: "123", password: "123456", role: "xixi" }
+    { user_name: "海绵宝宝", password: "123456", role: "admin" },
+    { user_name: "admin", password: "123456", role: "xx" }
   ]
 
   const user = users.find(u => u.user_name === user_name && u.password === password)

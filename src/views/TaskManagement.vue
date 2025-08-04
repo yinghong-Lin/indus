@@ -230,6 +230,7 @@ const fetchTasks = async () => {
       task_status: showCompleted.value ? '' : 'not_started,in_progress' // 如果显示已完成，则不筛选状态
     }
     const response = await taskAPI.getProductionTaskList(params)
+    console.log(response)
     if (response.code === 200) {
       tasks.value = response.data.tasks || []
     } else {

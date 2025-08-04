@@ -177,6 +177,8 @@ const statusNameMap = {
   OFF: '已停机',
   ON_IDLE: '空闲中',
   ON_RUNNING: '运行中',
+  // FAULT: '故障',
+  // MAINTAIN: '维护中'
 }
 
 /* ---------- 计算属性 ---------- */
@@ -191,6 +193,8 @@ const equipmentTypeSummaries = computed(() => {
         running_count: 0,
         off_count: 0,
         idle_count: 0,
+        // fault_count: 0,
+        // maintain_count: 0,
       }
     }
     typesMap[type].total_count++
@@ -201,6 +205,11 @@ const equipmentTypeSummaries = computed(() => {
     } else if (eq.equipment_status === 'ON_IDLE') {
       typesMap[type].idle_count++
     }
+    //  else if (eq.equipment_status === 'FAULT') {
+    //   typesMap[type].fault_count++;
+    // } else if (eq.equipment_status === 'MAINTAIN') {
+    //   typesMap[type].maintain_count++;
+    // }
   })
   return Object.values(typesMap)
 })
@@ -237,6 +246,8 @@ const getStatusTagType = (status) => {
     ON_RUNNING: 'success',
     OFF: 'info',
     ON_IDLE: 'info',
+    // FAULT: 'danger',
+    // MAINTAIN: 'warning'
   }
   return statusMap[status] || 'info'
 }
@@ -303,8 +314,10 @@ const getRealtimeDetailsDisplay = (dev) => {
 const fetchEquipmentStatusOverview = async () => {
   try {
     const response = await monitoringAPI.getEquipmentStatusByType('all')
+    console.log(response)
     if (response.code === 200) {
       allEquipmentStatus.value = response.data || []
+      console.log(allEquipmentStatus.value)
       // Ensure default selected type is in the list, if list is empty, don't set
       if (allEquipmentStatus.value.length > 0 && !equipmentTypeSummaries.value.some(item => item.equipment_type === activeType.value)) {
         activeType.value = equipmentTypeSummaries.value[0].equipment_type
@@ -357,6 +370,44 @@ const fetchAlarms = async () => {
   }
 }
 
+/* ---------- WebSocket 相关 ---------- */
+const updateRealtimeData = (realtimeData) => {
+  const equipmentIndex = allRealtimeDetails.value.findIndex(
+    (item) => item.equipment_id === realtimeData.equipment_id
+  )
+  if (equipmentIndex !== -1) {
+    // 更新现有设备数据
+    // 使用展开运算符确保响应式更新
+    allRealtimeDetails.value[equipmentIndex] = { ...allRealtimeDetails.value[equipmentIndex], ...realtimeData };
+  } else {
+    // 如果收到了一个不在当前 allRealtimeDetails 中的设备数据，可以考虑添加
+    // 但通常情况下，allRealtimeDetails 应该通过 HTTP 请求预先填充
+    console.warn(`收到未知设备ID的实时数据: ${realtimeData.equipment_id}。已添加。`);
+    allRealtimeDetails.value.push(realtimeData);
+  }
+}
+
+const setupWebSocketConnections = () => {
+  // 停止所有之前的 WebSocket 连接
+  websocketService.stopAllMonitoring();
+
+  // 获取当前活跃设备类型下的所有设备ID
+  const equipmentIdsToMonitor = allEquipmentStatus.value
+    .filter(eq => eq.equipment_type === activeType.value)
+    .map(eq => eq.equipment_id);
+  console.log(allEquipmentStatus.value)
+  console.log(equipmentIdsToMonitor)
+
+
+  if (equipmentIdsToMonitor.length > 0) {
+    websocketService.startMonitoring(equipmentIdsToMonitor, updateRealtimeData);
+  } else {
+    console.log(`设备类型 ${activeType.value} 下没有设备可供 WebSocket 监控。`);
+  }
+};
+
+
+/* ---------- 事件处理 ---------- */
 const refreshData = async () => {
   loading.value = true
   try {
@@ -365,6 +416,8 @@ const refreshData = async () => {
       fetchAllRealtimeDataForActiveType(),
       fetchAlarms(),
     ])
+    // 在初始数据加载完成后，设置 WebSocket 连接
+    setupWebSocketConnections();
     ElMessage.success('数据已刷新')
   } catch (error) {
     ElMessage.error('数据刷新失败')

@@ -13,10 +13,10 @@ import "./style.css"
 // Set dayjs locale globally to ensure consistent week start (e.g., Monday)
 dayjs.locale("zh-cn")
 
-// ✅ 开发环境启用 mock
-if (import.meta.env.DEV) {
-  import("./mock")
-}
+// // ✅ 开发环境启用 mock
+// if (import.meta.env.DEV) {
+//   import("./mock")
+// }
 
 const app = createApp(App)
 const pinia = createPinia()

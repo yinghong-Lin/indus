@@ -2,7 +2,7 @@ import { useAuthStore } from "../stores/auth" // 假设 auth store 的路径是�
 
 class WebSocketService {
   constructor() {
-    this.baseUrl = "ws://127.0.0.1:8000/productionMonitor/ws/getLastRealtimeData"
+    this.baseUrl = "ws://127.0.0.1:8000/api/productionMonitor/ws/getLastRealtimeData"
     this.connections = new Map() // Map to store WebSocket connections: equipment_id -> WebSocket instance
     this.onMessageCallback = null
     this.authStore = useAuthStore() // 获取 auth store 实例
@@ -14,13 +14,14 @@ class WebSocketService {
    * @param {Function} onMessageCallback - 处理实时数据的回调函数。
    */
   startMonitoring(equipmentIds, onMessageCallback) {
+    // console.log(equipmentIds)
     this.onMessageCallback = onMessageCallback
 
     // 从 authStore 中获取 accsee_token
     // const accessToken = this.authStore.access_token
-    const access_token =localStorage.getItem("access_token")
+    const accessToken = localStorage.getItem("access_token")
 
-    if (!access_token) {
+    if (!accessToken) {
       console.warn("WebSocketService: 未获取到 access token，无法建立连接。")
       return
     }
@@ -34,9 +35,10 @@ class WebSocketService {
 
     // 为提供的设备ID建立新连接
     equipmentIds.forEach((equipmentId) => {
+      console.log(accessToken)
       // 只有当连接不存在或已关闭时才建立新连接
       if (!this.connections.has(equipmentId) || this.connections.get(equipmentId).readyState === WebSocket.CLOSED) {
-        const url = `${this.baseUrl}?equipment_id=${equipmentId}&access_token=${access_token}`
+        const url = `${this.baseUrl}?equipment_id=${equipmentId}&access_token=${accessToken}`
         const ws = new WebSocket(url)
 
         ws.onopen = () => {

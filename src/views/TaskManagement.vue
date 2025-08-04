@@ -126,6 +126,13 @@
         <el-form-item label="截止时间" prop="end_time">
           <el-date-picker v-model="newTask.end_time" type="datetime" placeholder="选择截止时间" value-format="YYYY-MM-DD HH:mm:ss" class="full-width" />
         </el-form-item>
+        <el-form-item label="任务状态" v-if="isEditing" prop="task_status">
+          <el-select v-model="newTask.task_status" class="full-width">
+            <el-option label="待开始" value="not_started" />
+            <el-option label="进行中" value="in_progress" />
+            <el-option label="已完成" value="completed" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showAddDialog = false">取消</el-button>
@@ -189,6 +196,7 @@ const newTask = reactive({
   task_priority: 2, // 默认中优先级
   start_time: '',
   end_time: '',
+  task_status: 'not_started' // 默认待开始
 })
 
 const taskFormRef = ref(null)
@@ -199,6 +207,7 @@ const taskFormRules = {
   task_priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
   start_time: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
   end_time: [{ required: true, message: '请选择截止时间', trigger: 'change' }],
+  task_status: [{ required: true, message: '请选择任务状态', trigger: 'change' }]
 }
 
 const formatDate = (date, fmt = 'YYYY-MM-DD') => {
@@ -262,6 +271,7 @@ const openAddDialog = () => {
     task_priority: 2,
     start_time: dayjs().format('YYYY-MM-DD HH:mm:ss'), // 默认当前时间
     end_time: dayjs().add(1, 'day').format('YYYY-MM-DD HH:mm:ss'), // 默认明天
+    task_status: 'not_started' // 默认待开始
   })
   taskFormRef.value?.resetFields()
   showAddDialog.value = true
@@ -281,8 +291,8 @@ const openEditDialog = async (task) => {
         product_name: fetchedTask.product_name,
         production_quantity: fetchedTask.production_quantity,
         task_priority: fetchedTask.task_priority,
-        // production_progress and task_status are handled by updateProductionTaskStatus,
-        // actual_end_time is also handled by status update or is null for in_progress/not_started
+        production_progress: fetchedTask.production_progress,
+        task_status: fetchedTask.task_status, // 添加任务状态
         start_time: fetchedTask.start_time,
         end_time: fetchedTask.end_time,
       })
@@ -316,9 +326,8 @@ const submitTask = async () => {
         product_name: payload.product_name,
         production_quantity: payload.production_quantity,
         task_priority: payload.task_priority,
-        production_progress: selectedTask.value.production_progress, // Keep current progress
-        task_status: selectedTask.value.task_status, // Keep current status
-        actual_end_time: selectedTask.value.actual_end_time, // Keep current actual_end_time
+        production_progress: payload.production_progress, // Keep current progress
+        task_status: payload.task_status, // Keep current status
         start_time: payload.start_time,
         end_time: payload.end_time,
       };
@@ -332,6 +341,7 @@ const submitTask = async () => {
         task_priority: payload.task_priority,
         start_time: payload.start_time,
         end_time: payload.end_time,
+        task_status: payload.task_status // 添加任务状态
       };
       response = await taskAPI.addProductionTask(addPayload)
     }

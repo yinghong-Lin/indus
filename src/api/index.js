@@ -25,8 +25,9 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const authStore = useAuthStore()
-    if (authStore.token) {
-      config.headers.Authorization = `Bearer ${authStore.token}`
+    if (authStore.access_token) {
+      // Corrected spelling
+      config.headers.Authorization = `Bearer ${authStore.access_token}` // Corrected spelling
     }
     return config
   },

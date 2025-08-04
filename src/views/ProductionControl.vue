@@ -86,10 +86,24 @@
         <el-table-column label="操作" width="300" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
-              <el-button v-if="['RUN', 'OFF'].includes(row.equipment_status)" size="small"
-                :type="row.equipment_status === 'OFF' ? 'success' : 'warning'" @click="toggleEquipmentStatus(row)"
+              <el-button 
+                v-if="row.equipment_status === 'OFF'" 
+                size="small"
+                type="success" 
+                @click="toggleEquipmentStatus(row)"
                 :loading="row.statusLoading">
-                {{ row.equipment_status === 'OFF' ? '启动' : '停机' }}
+                  启动
+              </el-button>
+              <el-button 
+                v-if="row.equipment_status === 'ON_RUNNING'" 
+                size="small"
+                type="warning" 
+                @click="toggleEquipmentStatus(row)"
+                :loading="row.statusLoading">
+                  停机
+              </el-button>
+              <el-button v-if="row.equipment_status === 'ON_IDLE'" size="small" disabled>
+                已停机
               </el-button>
               <!-- <el-button size="small" @click="openEditDialog(row)">编辑</el-button> -->
               <el-button size="small" type="info" @click="openParamDialog(row)">设置</el-button>
@@ -135,12 +149,12 @@
 
         <!-- 设置参数 -->
         <el-divider content-position="left">设置参数</el-divider>
-        <DynamicSetting v-if="equipmentForm.setting_details && Object.keys(equipmentForm.setting_details).length > 0"
+        <DynamicSetting v-if="equipmentForm.setting_details"
           v-model="equipmentForm.setting_details" :type="equipmentForm.equipment_type" />
 
         <!-- 设备规格 -->
         <el-divider content-position="left">设备规格</el-divider>
-        <DynamicSpec v-if="equipmentForm.spec_details && Object.keys(equipmentForm.spec_details).length > 0"
+        <DynamicSpec v-if="equipmentForm.spec_details"
           v-model="equipmentForm.spec_details" :type="equipmentForm.equipment_type" />
       </el-form>
 
@@ -193,10 +207,9 @@ const typeNameMap = {
   spray_painting: '喷漆机'
 }
 const statusNameMap = {
-  RUN: '运行中',
-  OFF: '已停机',
-  ERROR: '故障',
-  MAINTAIN: '维护中'
+  ON_RUNNING: '运行中',
+  OFF: '空闲中',
+  ON_IDLE: '已停机'
 }
 
 // 响应式数据
@@ -234,8 +247,14 @@ const dialogTitle = computed(() => (equipmentForm.value.equipment_id ? '编辑�
 const getTypeName = (type) => typeNameMap[type] || type
 const getStatusName = (status) => statusNameMap[status] || status
 const getTypeTagType = () => 'info'
-const getStatusTagType = (status) =>
-  ({ RUN: 'success', OFF: 'info', ERROR: 'danger', MAINTAIN: 'warning' }[status] || 'info')
+const getStatusTagType = (status) => {
+  switch(status) {
+    case 'ON_RUNNING': return 'success'
+    case 'OFF': return 'info'
+    case 'ON_IDLE': return 'danger'
+    default: return 'info'
+  }
+}
 
 const formatDateTime = (dt) => {
   if (!dt) return '-'
@@ -302,6 +321,14 @@ const fetchEquipmentList = async () => {
 
     if (response.code === 200) {
       tableData.value = (response.data.equipments || []).map(item => ({ ...item, statusLoading: false }))
+
+      // 确保只有ON_RUNNING和OFF状态可以切换
+      tableData.value.forEach(item => {
+        if (item.equipment_status === 'ON_IDLE') {
+          item.statusLoading = false
+        }
+      })
+
       pagination.total = response.data.pagination.total
     } else {
       ElMessage.error(response.msg || '获取设备列表失败')
@@ -314,7 +341,7 @@ const fetchEquipmentList = async () => {
   }
 }
 
-// 搜索图片/重置
+// 搜索功能/重置
 const handleSearch = () => {
   pagination.page = 1
   fetchEquipmentList()
@@ -466,7 +493,7 @@ const openParamDialog = async (row) => {
     }
   } catch (error) {
     console.error('获取设备信息失败:', error)
-    ElMessage.error('获取设备信息失败')
+    El.Message.error('获取设备信息失败')
   }
 }
 
@@ -476,39 +503,43 @@ const submitEquipmentForm = async () => {
 
     submitLoading.value = true
 
-    // 深拷贝 payload 以避免直接修改响应式对象
-    const payload = JSON.parse(JSON.stringify(equipmentForm.value));
+    // Deep copy payload to avoid directly modifying reactive object
+    const payload = JSON.parse(JSON.stringify(equipmentForm.value))
 
-    // 确保 setting_details 中的 value 字段为数字
+    // Ensure setting_details and spec_details are initialized if empty
+    if (!payload.setting_details || Object.keys(payload.setting_details).length === 0) {
+      payload.setting_details = generateDefaultSettings(payload.equipment_type)
+    }
+    if (!payload.spec_details || Object.keys(payload.spec_details).length === 0) {
+      payload.spec_details = generateDefaultSpecs(payload.equipment_type)
+    }
+
+    // Ensure value fields in setting_details are numbers
     if (payload.setting_details) {
       for (const key in payload.setting_details) {
         if (payload.setting_details[key] && typeof payload.setting_details[key].value !== 'number') {
-          payload.setting_details[key].value = 0; // 默认为 0
+          payload.setting_details[key].value = 0 // Default to 0 if not a number
         }
       }
-    } else {
-      payload.setting_details = generateDefaultSettings(payload.equipment_type);
     }
 
-    // 确保 spec_details 中的 min/max 字段为数字
+    // Ensure min/max fields in spec_details are numbers
     if (payload.spec_details) {
       for (const key in payload.spec_details) {
         if (payload.spec_details[key]) {
           if (typeof payload.spec_details[key].min !== 'number') {
-            payload.spec_details[key].min = 0;
+            payload.spec_details[key].min = 0
           }
           if (typeof payload.spec_details[key].max !== 'number') {
-            payload.spec_details[key].max = 0;
+            payload.spec_details[key].max = 0
           }
         }
       }
-    } else {
-      payload.spec_details = generateDefaultSpecs(payload.equipment_type);
     }
 
-    // 如果是新增操作，确保 equipment_status 默认为 'OFF'
+    // If it's an add operation, ensure equipment_status defaults to 'OFF'
     if (!payload.equipment_id) {
-      payload.equipment_status = 'OFF';
+      payload.equipment_status = 'OFF'
     }
 
     const api = equipmentForm.value.equipment_id
@@ -558,7 +589,13 @@ const handleDelete = async (row) => {
 }
 
 const toggleEquipmentStatus = async (row) => {
-  const newStatus = row.equipment_status === 'RUN' ? 'OFF' : 'RUN'
+  // 确保只有ON_RUNNING和OFF状态可以切换
+  if (row.equipment_status === 'ON_IDLE') {
+    ElMessage.info('已停机状态无法切换')
+    return
+  }
+
+  const newStatus = row.equipment_status === 'ON_RUNNING' ? 'OFF' : 'ON_RUNNING'
   row.statusLoading = true
   try {
     const res = await equipmentAPI.updateEquipmentRunStatus(row.equipment_id, newStatus)
@@ -795,6 +832,10 @@ onMounted(() => {
 
 :deep(.el-input__inner) {
   color: #ffffff;
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: #888;
 }
 
 :deep(.el-select .el-input__wrapper) {

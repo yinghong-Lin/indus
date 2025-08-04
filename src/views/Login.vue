@@ -58,7 +58,7 @@ import { userAPI } from '../api/user'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const loginFormRef = ref()
+const loginFormRef = ref(null)
 
 const loginForm = reactive({
   user_name: 'admin',
@@ -81,18 +81,17 @@ const handleLogin = async () => {
   await loginFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const response = await userAPI.login(loginForm) // ✅ 使用 userAPI.login
-        // const { user, token, refreshToken } = response
+        const response = await userAPI.login(loginForm) // ✅ Use userAPI.login
         const user = response.data.user
         const access_token = response.data.access_token
         const refresh_token = response.data.refresh_token
 
-        // ✅ 手动设置 token 和用户信息到 authStore
+        // ✅ Manually set token and user info to authStore
         authStore.user = user
-        authStore.token = access_token
-        authStore.refreshToken = refresh_token
+        authStore.access_token = access_token // Corrected spelling
+        authStore.refresh_token = refresh_token
 
-        localStorage.setItem('user', user)
+        localStorage.setItem('user', JSON.stringify(user)) // Store object needs to be stringified
         localStorage.setItem('access_token', access_token)
         localStorage.setItem('refresh_token', refresh_token)
 

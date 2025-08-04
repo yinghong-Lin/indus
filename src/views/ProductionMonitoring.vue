@@ -62,9 +62,6 @@
                 <span>{{ detail.label }}：</span><b>{{ detail.value }}</b>
               </div>
             </template>
-            <div class="real-item" v-if="dev.realtime_status?.production_stage_desc">
-              <span>实时状态：</span><b>{{ dev.realtime_status.production_stage_desc }}</b>
-            </div>
             <div class="ts">采集时间：{{ formatTime(dev.collection_time) }}</div>
           </el-card>
         </el-col>
@@ -275,27 +272,40 @@ const getRealtimeDetailsDisplay = (dev) => {
     case 'hot_stamping':
       if (dev.realtime_details.realtime_stamping_temp) details.push({ label: '烫金温度', value: `${dev.realtime_details.realtime_stamping_temp.value}${dev.realtime_details.realtime_stamping_temp.unit}` })
       if (dev.realtime_details.realtime_stamping_pressure) details.push({ label: '烫金压力', value: `${dev.realtime_details.realtime_stamping_pressure.value}${dev.realtime_details.realtime_stamping_pressure.unit}` })
+      if (dev.realtime_details.realtime_stamping_time) details.push({ label: '烫金时间', value: `${dev.realtime_details.realtime_stamping_time.value}${dev.realtime_details.realtime_stamping_time.unit}` })
       if (dev.realtime_details.realtime_foil_speed) details.push({ label: '金箔速度', value: `${dev.realtime_details.realtime_foil_speed.value}${dev.realtime_details.realtime_foil_speed.unit}` })
       break
     case 'injection_molding':
       if (dev.realtime_details.realtime_heating_temp) details.push({ label: '加热温度', value: `${dev.realtime_details.realtime_heating_temp.value}${dev.realtime_details.realtime_heating_temp.unit}` })
+      if (dev.realtime_details.realtime_cooling_time) details.push({ label: '冷却时间', value: `${dev.realtime_details.realtime_cooling_time.value}${dev.realtime_details.realtime_cooling_time.unit}` })
+      if (dev.realtime_details.realtime_injection_speed) details.push({ label: '注射速度', value: `${dev.realtime_details.realtime_injection_speed.value}${dev.realtime_details.realtime_injection_speed.unit}` })
       if (dev.realtime_details.realtime_injection_pressure) details.push({ label: '注射压力', value: `${dev.realtime_details.realtime_injection_pressure.value}${dev.realtime_details.realtime_injection_pressure.unit}` })
+      if (dev.realtime_details.realtime_injection_time) details.push({ label: '注射时间', value: `${dev.realtime_details.realtime_injection_time.value}${dev.realtime_details.realtime_injection_time.unit}` })
+      if (dev.realtime_details.realtime_opening_time) details.push({ label: '开模时间', value: `${dev.realtime_details.realtime_opening_time.value}${dev.realtime_details.realtime_opening_time.unit}` })
+      if (dev.realtime_details.realtime_closing_time) details.push({ label: '合模时间', value: `${dev.realtime_details.realtime_closing_time.value}${dev.realtime_details.realtime_closing_time.unit}` })
+      if (dev.realtime_details.realtime_holding_pressure) details.push({ label: '保压压力', value: `${dev.realtime_details.realtime_holding_pressure.value}${dev.realtime_details.realtime_holding_pressure.unit}` })
+      if (dev.realtime_details.realtime_holding_time) details.push({ label: '保压时间', value: `${dev.realtime_details.realtime_holding_time.value}${dev.realtime_details.realtime_holding_time.unit}` })
+      if (dev.realtime_details.realtime_injection_position) details.push({ label: '注射位置', value: `${dev.realtime_details.realtime_injection_position.value}${dev.realtime_details.realtime_injection_position.unit}` })
       if (dev.realtime_details.realtime_screw_speed) details.push({ label: '螺杆转速', value: `${dev.realtime_details.realtime_screw_speed.value}${dev.realtime_details.realtime_screw_speed.unit}` })
       break
     case 'screen_printing':
       if (dev.realtime_details.realtime_printing_pressure) details.push({ label: '印刷压力', value: `${dev.realtime_details.realtime_printing_pressure.value}${dev.realtime_details.realtime_printing_pressure.unit}` })
-      if (dev.realtime_details.realtime_ink_viscosity) details.push({ label: '油墨粘度', value: `${dev.realtime_details.realtime_ink_viscosity.value}${dev.realtime_details.realtime_ink_viscosity.unit}` })
       if (dev.realtime_details.realtime_printing_speed) details.push({ label: '印刷速度', value: `${dev.realtime_details.realtime_printing_speed.value}${dev.realtime_details.realtime_printing_speed.unit}` })
+      if (dev.realtime_details.realtime_ink_viscosity) details.push({ label: '油墨粘度', value: `${dev.realtime_details.realtime_ink_viscosity.value}${dev.realtime_details.realtime_ink_viscosity.unit}` })
+      if (dev.realtime_details.realtime_ink_drying_time) details.push({ label: '干燥时间', value: `${dev.realtime_details.realtime_ink_drying_time.value}${dev.realtime_details.realtime_ink_drying_time.unit}` })
       break
     case 'spray_painting':
       if (dev.realtime_details.realtime_spray_pressure) details.push({ label: '喷漆压力', value: `${dev.realtime_details.realtime_spray_pressure.value}${dev.realtime_details.realtime_spray_pressure.unit}` })
-      if (dev.realtime_details.realtime_drying_temp) details.push({ label: '干燥温度', value: `${dev.realtime_details.realtime_drying_temp.value}${dev.realtime_details.realtime_drying_temp.unit}` })
+      if (dev.realtime_details.realtime_spray_distance) details.push({ label: '喷漆距离', value: `${dev.realtime_details.realtime_spray_distance.value}${dev.realtime_details.realtime_spray_distance.unit}` })
       if (dev.realtime_details.realtime_spray_speed) details.push({ label: '喷漆速度', value: `${dev.realtime_details.realtime_spray_speed.value}${dev.realtime_details.realtime_spray_speed.unit}` })
+      if (dev.realtime_details.realtime_drying_temp) details.push({ label: '干燥温度', value: `${dev.realtime_details.realtime_drying_temp.value}${dev.realtime_details.realtime_drying_temp.unit}` })
+      if (dev.realtime_details.realtime_drying_time) details.push({ label: '干燥时间', value: `${dev.realtime_details.realtime_drying_time.value}${dev.realtime_details.realtime_drying_time.unit}` })
+      if (dev.realtime_details.realtime_paint_viscosity) details.push({ label: '油漆粘度', value: `${dev.realtime_details.realtime_paint_viscosity.value}${dev.realtime_details.realtime_paint_viscosity.unit}` })
       break
   }
   // Add production stage if available and not already covered by specific details
-  if (dev.realtime_details.realtime_production_stage && !details.some(d => d.label === '生产阶段')) {
-    details.push({ label: '生产阶段', value: `${dev.realtime_status.production_stage_desc}` });
+  if (dev.realtime_status?.production_stage_desc && !details.some(d => d.label === '生产阶段')) {
+    details.push({ label: '生产阶段', value: dev.realtime_status.production_stage_desc });
   }
   return details
 }
@@ -342,10 +352,13 @@ const fetchAllRealtimeDataForActiveType = async () => {
 
 const fetchAlarms = async () => {
   try {
-    const response = await monitoringAPI.getAlarmList(alarmPagination.value.page, alarmPagination.value.page_size)
+    const response = await monitoringAPI.getAlarmList(
+      alarmPagination.value.page,
+      alarmPagination.value.page_size
+    )
     if (response.code === 200) {
       alarms.value = response.data.Alarms || []
-      alarmPagination.value.total = response.data.pagination.total || 0
+      alarmPagination.value.total = response.data.pagination.total
     } else {
       ElMessage.error(response.msg || '获取报警记录失败')
     }
@@ -355,49 +368,14 @@ const fetchAlarms = async () => {
   }
 }
 
-/* ---------- WebSocket 相关 ---------- */
-const updateRealtimeData = (realtimeData) => {
-  const equipmentIndex = allRealtimeDetails.value.findIndex(
-    (item) => item.equipment_id === realtimeData.equipment_id
-  )
-  if (equipmentIndex !== -1) {
-    // 更新现有设备数据
-    // 使用展开运算符确保响应式更新
-    allRealtimeDetails.value[equipmentIndex] = { ...allRealtimeDetails.value[equipmentIndex], ...realtimeData };
-  } else {
-    // 如果收到了一个不在当前 allRealtimeDetails 中的设备数据，可以考虑添加
-    // 但通常情况下，allRealtimeDetails 应该通过 HTTP 请求预先填充
-    console.warn(`收到未知设备ID的实时数据: ${realtimeData.equipment_id}。已添加。`);
-    allRealtimeDetails.value.push(realtimeData);
-  }
-}
-
-const setupWebSocketConnections = () => {
-  // 停止所有之前的 WebSocket 连接
-  websocketService.stopAllMonitoring();
-
-  // 获取当前活跃设备类型下的所有设备ID
-  const equipmentIdsToMonitor = allEquipmentStatus.value
-    .filter(eq => eq.equipment_type === activeType.value)
-    .map(eq => eq.equipment_id);
-
-  if (equipmentIdsToMonitor.length > 0) {
-    websocketService.startMonitoring(equipmentIdsToMonitor, updateRealtimeData);
-  } else {
-    console.log(`设备类型 ${activeType.value} 下没有设备可供 WebSocket 监控。`);
-  }
-};
-
-
-/* ---------- 事件处理 ---------- */
 const refreshData = async () => {
   loading.value = true
   try {
-    await fetchEquipmentStatusOverview()
-    await fetchAllRealtimeDataForActiveType()
-    await fetchAlarms()
-    // 在初始数据加载完成后，设置 WebSocket 连接
-    setupWebSocketConnections();
+    await Promise.all([
+      fetchEquipmentStatusOverview(),
+      fetchAllRealtimeDataForActiveType(),
+      fetchAlarms(),
+    ])
     ElMessage.success('数据已刷新')
   } catch (error) {
     ElMessage.error('数据刷新失败')
@@ -407,227 +385,375 @@ const refreshData = async () => {
 }
 
 const exportData = () => {
-  ElMessage.info('导出功能开发中')
+  ElMessage.info('导出报告功能开发中...')
 }
 
-const handleAlarmSizeChange = (size) => {
-  alarmPagination.value.page_size = size
-  alarmPagination.value.page = 1
+const showUpdateLevelDialog = async (alarm) => {
+  const { value: level } = await ElMessageBox.prompt(
+    '请输入新的报警级别',
+    '更新报警级别',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputValue: alarm.alarm_level,
+      // 添加一个提示信息
+      message: '提示：级别必须是 严重、警告 或 致命',
+      // 禁用输入验证，因为我们已经提供了提示信息
+      inputPattern: null,
+    }
+  ).catch(() => false);
+
+  if (level) {
+    // 手动验证输入
+    if (!['严重', '警告', '致命'].includes(level)) {
+      ElMessage.error('级别必须是 严重、警告 或 致命');
+      return;
+    }
+
+    try {
+      const res = await monitoringAPI.updateAlarmLevel(alarm.alarm_id, level);
+      if (res.code === 200) {
+        ElMessage.success('报警级别更新成功');
+        fetchAlarms();
+      } else {
+        ElMessage.error(res.msg || '报警级别更新失败');
+      }
+    } catch (error) {
+      console.error('更新报警级别失败:', error);
+      ElMessage.error('更新报警级别失败');
+    }
+  }
+};
+
+const showUpdateStatusDialog = async (alarm) => {
+  const { value: status } = await ElMessageBox.prompt(
+    '请输入新的报警状态',
+    '更新报警状态',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputValue: alarm.alarm_status,
+      // 添加一个提示信息
+      message: '提示：状态必须是 已处理 或 未处理',
+      // 禁用输入验证，因为我们已经提供了提示信息
+      inputPattern: null,
+    }
+  ).catch(() => false);
+
+  if (status) {
+    // 手动验证输入
+    if (!['已处理', '未处理'].includes(status)) {
+      ElMessage.error('状态必须是 已处理 或 未处理');
+      return;
+    }
+
+    try {
+      const res = await monitoringAPI.updateAlarmStatus(alarm.alarm_id, status);
+      if (res.code === 200) {
+        ElMessage.success('报警状态更新成功');
+        fetchAlarms();
+      } else {
+        ElMessage.error(res.msg || '报警状态更新失败');
+      }
+    } catch (error) {
+      console.error('更新报警状态失败:', error);
+      ElMessage.error('更新报警状态失败');
+    }
+  }
+};
+
+/* ---------- 分页处理 ---------- */
+const handleAlarmSizeChange = (val) => {
+  alarmPagination.value.page_size = val
   fetchAlarms()
 }
-
-const handleAlarmCurrentChange = (page) => {
-  alarmPagination.value.page = page
+const handleAlarmCurrentChange = (val) => {
+  alarmPagination.value.page = val
   fetchAlarms()
 }
-
-const handleRealtimeSizeChange = (size) => {
-  realtimePagination.value.page_size = size
-  realtimePagination.value.page = 1
+const handleRealtimeSizeChange = (val) => {
+  realtimePagination.value.page_size = val
+  realtimePagination.value.page = 1 // Reset to first page when page size changes
+}
+const handleRealtimeCurrentChange = (val) => {
+  realtimePagination.value.page = val
 }
 
-const handleRealtimeCurrentChange = (page) => {
-  realtimePagination.value.page = page
-}
+/* ---------- 生命周期钩子 ---------- */
+let realtimeDataInterval = null
+let ws = null
+const authStore = useAuthStore()
 
-watch(activeType, async (newType) => {
-  if (newType) {
-    // 当 activeType 改变时，重新获取新类型设备的初始数据
-    await fetchAllRealtimeDataForActiveType();
-    // 然后重新建立 WebSocket 连接
-    setupWebSocketConnections();
+onMounted(async () => {
+  await refreshData()
+
+  // Set up interval for fetching realtime data for the active type
+  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 5000) // Fetch every 5 seconds
+
+  // Initialize WebSocket connection
+  if (authStore.isAuthenticated && authStore.access_token) {
+    ws = websocketService.connect(authStore.access_token)
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.code === 200 && data.data) {
+        const receivedRealtimeData = data.data
+        // Update the specific equipment's realtime data in allRealtimeDetails
+        const index = allRealtimeDetails.value.findIndex(
+          (item) => item.equipment_id === receivedRealtimeData.equipment_id
+        )
+        if (index !== -1) {
+          allRealtimeDetails.value[index] = receivedRealtimeData
+        } else {
+          allRealtimeDetails.value.push(receivedRealtimeData)
+        }
+      }
+    }
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error)
+      ElMessage.error('WebSocket连接错误')
+    }
+    ws.onclose = () => {
+      console.log('WebSocket连接已关闭')
+    }
   }
 })
 
-onMounted(async () => {
-  await refreshData() // 首次加载数据并设置 WebSocket
+onUnmounted(() => {
+  if (realtimeDataInterval) {
+    clearInterval(realtimeDataInterval)
+  }
+  if (ws) {
+    websocketService.disconnect()
+  }
 })
 
-onUnmounted(() => {
-  websocketService.stopAllMonitoring(); // 组件卸载时关闭所有 WebSocket 连接
-});
-
-/* ---------- 报警记录更新功能 ---------- */
-const showUpdateLevelDialog = (alarm) => {
-  ElMessageBox.prompt('请输入新的报警级别', '更新报警级别', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /^(警告|严重|致命)$/,
-    inputErrorMessage: '级别必须为 "警告", "严重" 或 "致命"'
-  }).then(async ({ value }) => {
-    try {
-      await monitoringAPI.updateAlarmLevel(alarm.alarm_id, value)
-      ElMessage.success(`报警记录级别已更新为：${value}`)
-      await fetchAlarms() // 刷新报警列表
-    } catch (error) {
-      ElMessage.error('更新报警级别失败')
-    }
-  }).catch(() => {
-    ElMessage.info('取消更新')
-  })
-}
-
-const showUpdateStatusDialog = (alarm) => {
-  ElMessageBox.prompt('请输入新的报警状态', '更新报警状态', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /^(已处理|未处理)$/,
-    inputErrorMessage: '状态必须为 "已处理" 或 "未处理"'
-  }).then(async ({ value }) => {
-    try {
-      await monitoringAPI.updateAlarmStatus(alarm.alarm_id, value)
-      ElMessage.success(`报警记录状态已更新为：${value}`)
-      await fetchAlarms() // 刷新报警列表
-    } catch (error) {
-      ElMessage.error('更新报警状态失败')
-    }
-  }).catch(() => {
-    ElMessage.info('取消更新')
-  })
-}
+// Watch for activeType changes to refetch realtime data for the new type
+watch(activeType, (newType, oldType) => {
+  if (newType !== oldType) {
+    fetchAllRealtimeDataForActiveType()
+  }
+})
 </script>
 
 <style scoped>
-h2 {
-  margin-bottom: 10px;
-  color: #ffffff;
-}
 .production-monitoring {
   padding: 20px;
-  background: #0a0a0a; /* Changed to match global background */
-  color: #fff;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
   min-height: 100vh;
 }
+
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
+
+.page-header h1 {
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.header-actions .el-button {
+  margin-left: 10px;
+}
+
 .params-overview {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
+
 .param-card {
-  background: rgba(26, 26, 26, 0.9) !important; /* Darker background */
-  border: 1px solid rgba(255, 255, 255, 0.1) !important; /* Subtle border */
-  border-radius: 8px !important; /* More rounded corners */
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 }
+
 .param-card:hover {
-  box-shadow: 0 0 15px rgba(64, 158, 255, 0.4); /* Blue glow on hover */
-  transform: translateY(-3px);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
 }
+
 .param-card.active {
-  border: 1px solid #409eff !important; /* Active border color */
-  box-shadow: 0 0 15px rgba(64, 158, 255, 0.6);
+  border-color: #409EFF;
+  box-shadow: 0 0 20px rgba(64, 158, 255, 0.4);
 }
+
 .param-card h3 {
-  margin: 0 0 8px !important;
-  font-size: 16px !important;
-  color: #ffffff !important;
+  color: #ffffff;
+  font-size: 18px;
+  margin: 0;
 }
+
 .param-row {
-  display: flex !important;
-  justify-content: space-between !important;
-  font-size: 14px !important;
-  margin: 6px 0 !important;
-  color: #cccccc !important; /* Lighter text for values */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+  color: #cccccc;
+  font-size: 14px;
 }
+
+.param-row:last-child {
+  border-bottom: none;
+}
+
 .param-row b {
-  color: #ffffff; /* White for bold values */
+  color: #ffffff;
   font-weight: 600;
 }
+
 .realtime-section,
 .alarm-section {
   margin-bottom: 30px;
+}
+
+.realtime-section h2,
+.alarm-section h2 {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.realtime-card {
   background: rgba(26, 26, 26, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 20px;
-}
-.realtime-section h2, .alarm-section h2 {
-  margin-top: 0;
+  border-radius: 12px;
   margin-bottom: 20px;
 }
-.realtime-card {
-  background: rgba(38, 38, 38, 0.9); /* Slightly lighter card background */
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
+
 .realtime-card h4 {
-  margin: 0 0 8px;
-  font-size: 16px;
   color: #ffffff;
+  font-size: 16px;
+  margin: 0;
 }
+
+.realtime-card .el-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(38, 38, 38, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .real-item {
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
-  margin: 6px 0;
+  padding: 6px 0;
   color: #cccccc;
+  font-size: 13px;
 }
+
 .real-item b {
   color: #ffffff;
   font-weight: 500;
 }
+
 .ts {
-  margin-top: 10px;
   font-size: 12px;
   color: #888;
+  margin-top: 10px;
   text-align: right;
 }
-.el-table {
-  background: transparent;
-  color: #ffffff;
+
+.no-data {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin-top: 20px;
 }
-.el-table th.el-table__cell {
-  background: rgba(38, 38, 38, 0.9);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-.el-table td.el-table__cell {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell {
-  background: rgba(255, 255, 255, 0.02);
-}
-.el-table__body tr:hover > td.el-table__cell {
-  background: rgba(255, 255, 255, 0.05);
-}
+
 .pagination-wrapper {
   display: flex;
   justify-content: center;
   margin-top: 20px;
 }
-.no-data {
-  text-align: center;
-  color: #888;
-  padding: 20px;
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  margin-top: 10px;
+
+/* Element Plus Table Customization */
+:deep(.el-table) {
+  background: transparent;
+  color: #ffffff;
 }
-/* Responsive adjustments */
+
+:deep(.el-table th.el-table__cell) {
+  background: rgba(38, 38, 38, 0.9);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+:deep(.el-table td.el-table__cell) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cccccc;
+}
+
+:deep(.el-table--striped .el-table__body tr.el-table__row--striped td.el-table__cell) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+:deep(.el-table__body tr:hover > td.el-table__cell) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:deep(.el-pagination) {
+  color: #ffffff;
+}
+
+:deep(.el-pagination .el-select .el-input .el-input__inner) {
+  color: #ffffff;
+}
+
+:deep(.el-pagination .el-input__inner) {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:deep(.el-pagination .btn-prev, .el-pagination .btn-next) {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+:deep(.el-pagination .el-pager li) {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+:deep(.el-pagination .el-pager li.is-active) {
+  background-color: #409EFF !important;
+  border-color: #409EFF !important;
+}
+
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
   }
+
   .header-actions {
     width: 100%;
     display: flex;
     justify-content: flex-end;
   }
+
   .params-overview {
     grid-template-columns: 1fr;
+  }
+
+  .realtime-section .el-col {
+    flex: 0 0 100%;
+    max-width: 100%;
   }
 }
 </style>

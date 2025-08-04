@@ -1,20 +1,13 @@
 import Mock from "mockjs"
 
 // 导入各模块的 Mock 数据
-import "./modules/dashboard"
-import "./modules/equipment"
 import "./modules/fault"
-import "./modules/form"
+import "./modules/equipment"
 import "./modules/home"
 import "./modules/maintenance"
-import "./modules/material"
 import "./modules/monitoring"
-import "./modules/product"
-import "./modules/production"
-import "./modules/realtime"
 import "./modules/task"
 import "./modules/user"
-import "./modules/role"
 
 
 // 设置Mock配置

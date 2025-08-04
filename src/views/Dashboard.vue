@@ -2,7 +2,7 @@
   <div class="data-dashboard">
     <!-- 头部 -->
     <header class="dashboard-header">
-      <h1>智慧工厂 · 生产数据大屏</h1>
+      <h1>数据大屏</h1>
       <div class="header-info">
         <span class="current-time">{{ currentTime }}</span>
         <el-button type="primary" size="small" @click="refreshData">

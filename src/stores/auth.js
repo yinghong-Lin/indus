@@ -3,7 +3,7 @@ import { userAPI } from '../api/user'
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: null,
+    user: JSON.parse(localStorage.getItem("user")) || null, // 从 localStorage 加载 user
     access_token: localStorage.getItem("access_token"),
     refresh_token: localStorage.getItem("refresh_token"),
     isLoading: false,
@@ -12,7 +12,7 @@ export const useAuthStore = defineStore("auth", {
   getters: {
     isAuthenticated: (state) => !!state.access_token,
     userRole: (state) => state.user?.role || "user",
-    username: (state) => state.user?.user_name || "", // 添加用户名 getter
+    username: (state) => state.user?.user_name || "",
   },
 
   actions: {
@@ -61,23 +61,5 @@ export const useAuthStore = defineStore("auth", {
       }
     },
 
-    async refreshTokenAction() {
-      if (!this.refresh_token) return false
-
-      try {
-        const response = await userAPI.refreshToken(this.refresh_token)
-        this.access_token = response.access_token
-        localStorage.setItem("access_token", response.access_token)
-        return true
-      } catch (error) {
-        this.logout()
-        return false
-      }
-    },
-
-    async getCurrentUser() {
-      if (!this.access_token) return
-      this.logout()
-    },
   },
 })

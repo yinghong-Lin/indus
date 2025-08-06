@@ -51,15 +51,55 @@
         >
           <el-card class="realtime-card">
             <template #header>
-              <h4>{{ dev.equipment_name }}</h4>
-              <el-tag :type="getStatusTagType(dev.equipment_status)">{{ getStatusName(dev.equipment_status) }}</el-tag>
+              <div style="display: flex; justify-content: space-between; width: 100%;">
+                <h4>{{ dev.equipment_name }}</h4>
+                <el-tag :type="getStatusTagType(dev.equipment_status)">{{ getStatusName(dev.equipment_status) }}</el-tag>
+                <el-button
+                  size="small"
+                  style="margin-left: 10px;"
+                  @click.stop="toggleDataView(dev.equipment_id)"
+                >
+                  {{ displayStatus[dev.equipment_id] ? '查看详细参数' : '查看运行状态' }}
+                </el-button>
+              </div>
             </template>
             <div class="real-item">
               <span>位置：</span><b>{{ dev.location }}</b>
             </div>
-            <template v-for="(detail, key) in getRealtimeDetailsDisplay(dev)" :key="key">
-              <div class="real-item">
-                <span>{{ detail.label }}：</span><b>{{ detail.value }}</b>
+            <template v-if="!displayStatus[dev.equipment_id]">
+              <template v-for="(detail, key) in getRealtimeDetailsDisplay(dev)" :key="key">
+                <div class="real-item">
+                  <span>{{ detail.label }}：</span><b>{{ detail.value }}</b>
+                </div>
+              </template>
+            </template>
+            <template v-else>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>运行状态：</span><b>{{ dev.realtime_status.running ? '运行中' : '未运行' }}</b>
+              </div>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>电源开启：</span><b>{{ dev.realtime_status.power_on ? '已开启' : '未开启' }}</b>
+              </div>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>循环计数：</span><b>{{ dev.realtime_status.cycle_count }}</b>
+              </div>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>设备就绪：</span><b>{{ dev.realtime_status.device_ready ? '就绪' : '未就绪' }}</b>
+              </div>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>烫金完成：</span><b>{{ dev.realtime_status.stamping_done ? '完成' : '未完成' }}</b>
+              </div>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>紧急停止：</span><b>{{ dev.realtime_status.emergency_stop ? '已停止' : '正常' }}</b>
+              </div>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>准备完成：</span><b>{{ dev.realtime_status.preparation_done ? '完成' : '未完成' }}</b>
+              </div>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>生产阶段：</span><b>{{ dev.realtime_status.production_stage }}</b>
+              </div>
+              <div class="real-item" v-if="dev.realtime_status">
+                <span>生产阶段描述：</span><b>{{ dev.realtime_status.production_stage_desc }}</b>
               </div>
             </template>
             <div class="ts">采集时间：{{ formatTime(dev.collection_time) }}</div>
@@ -164,6 +204,7 @@ const realtimePagination = ref({ // New pagination for realtime data
   page: 1,
   page_size: 4, // Display 4 cards per page
 })
+const displayStatus = ref({}) // Track which view to display for each device
 
 // 中文映射
 const typeNameMap = {
@@ -303,10 +344,6 @@ const getRealtimeDetailsDisplay = (dev) => {
       if (dev.realtime_details.realtime_paint_viscosity) details.push({ label: '油漆粘度', value: `${dev.realtime_details.realtime_paint_viscosity.value}${dev.realtime_details.realtime_paint_viscosity.unit}` })
       break
   }
-  // Add production stage if available and not already covered by specific details
-  if (dev.realtime_status?.production_stage_desc && !details.some(d => d.label === '生产阶段')) {
-    details.push({ label: '生产阶段', value: dev.realtime_status.production_stage_desc });
-  }
   return details
 }
 
@@ -405,7 +442,6 @@ const setupWebSocketConnections = () => {
     console.log(`设备类型 ${activeType.value} 下没有设备可供 WebSocket 监控。`);
   }
 };
-
 
 /* ---------- 事件处理 ---------- */
 const refreshData = async () => {
@@ -578,6 +614,11 @@ watch(activeType, (newType, oldType) => {
     fetchAllRealtimeDataForActiveType()
   }
 })
+
+// 切换实时数据展示内容
+const toggleDataView = (equipmentId) => {
+  displayStatus.value[equipmentId] = !displayStatus.value[equipmentId]
+}
 </script>
 
 <style scoped>

@@ -334,6 +334,7 @@ const getRealtimeDetailsDisplay = (dev) => {
       if (dev.realtime_details.realtime_printing_speed) details.push({ label: '印刷速度', value: `${dev.realtime_details.realtime_printing_speed.value}${dev.realtime_details.realtime_printing_speed.unit}` })
       if (dev.realtime_details.realtime_ink_viscosity) details.push({ label: '油墨粘度', value: `${dev.realtime_details.realtime_ink_viscosity.value}${dev.realtime_details.realtime_ink_viscosity.unit}` })
       if (dev.realtime_details.realtime_ink_drying_time) details.push({ label: '干燥时间', value: `${dev.realtime_details.realtime_ink_drying_time.value}${dev.realtime_details.realtime_ink_drying_time.unit}` })
+      if (dev.realtime_details.realtime_ink_level) details.push({ label: '油墨液位', value: `${dev.realtime_details.realtime_ink_level.value}${dev.realtime_details.realtime_ink_level.unit}` })
       break
     case 'spray_painting':
       if (dev.realtime_details.realtime_spray_pressure) details.push({ label: '喷漆压力', value: `${dev.realtime_details.realtime_spray_pressure.value}${dev.realtime_details.realtime_spray_pressure.unit}` })
@@ -578,7 +579,7 @@ onMounted(async () => {
   await refreshData()
 
   // Set up interval for fetching realtime data for the active type
-  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 5000) // Fetch every 5 seconds
+  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 3000) // Fetch every 5 seconds
 
   // Initialize WebSocket connection and set up message handler
   if (authStore.isAuthenticated) {

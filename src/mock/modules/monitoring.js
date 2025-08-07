@@ -26,6 +26,7 @@ const generateRealtimeData = (equipment_type, equipment_id, equipment_name) => {
         realtime_printing_speed: { value: Mock.Random.float(0.5, 1.0, 1, 1), unit: "m/s" },
         realtime_ink_viscosity: { value: Mock.Random.float(8, 14, 1, 1), unit: "Pa·s" },
         realtime_ink_drying_time: { value: Mock.Random.natural(20, 60), unit: "s" },
+        realtime_ink_level: { value: Mock.Random.natural(60, 120), unit: "%" },// 实时油墨液位
       }
       break
     case "hot_stamping":

@@ -7,9 +7,6 @@
         <el-button type="primary" @click="refreshData" :loading="loading">
           <el-icon><Refresh /></el-icon> 刷新数据
         </el-button>
-        <el-button type="success" @click="exportData">
-          <el-icon><Download /></el-icon> 导出报告
-        </el-button>
       </div>
     </div>
 
@@ -463,9 +460,6 @@ const refreshData = async () => {
   }
 }
 
-const exportData = () => {
-  ElMessage.info('导出报告功能开发中...')
-}
 
 const showUpdateLevelDialog = async (alarm) => {
   const { value: level } = await ElMessageBox.prompt(

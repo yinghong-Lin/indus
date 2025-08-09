@@ -25,7 +25,6 @@
           <span>任务管理</span>
         </el-menu-item>
 
-
         <el-menu-item index="/monitoring">
           <el-icon>
             <DataAnalysis />
@@ -42,14 +41,14 @@
 
         <el-menu-item index="/maintenance">
           <el-icon>
-            <Setting />
+            <Tools />
           </el-icon>
           <span>维修管理</span>
         </el-menu-item>
 
         <el-menu-item index="/dashboard">
           <el-icon>
-            <Setting />
+            <Histogram />
           </el-icon>
           <span>生产看板</span>
         </el-menu-item>
@@ -76,15 +75,6 @@
         </div>
 
         <div class="header-right">
-          <!-- 通知 -->
-          <el-badge :value="notifications.length" class="notification-badge">
-            <el-button type="text" @click="showNotifications">
-              <el-icon>
-                <Bell />
-              </el-icon>
-            </el-button>
-          </el-badge>
-
           <!-- 用户菜单 -->
           <div class="user-info">
             <el-avatar :size="32" :src="userAvatar">
@@ -105,20 +95,6 @@
     </el-container>
   </el-container>
 
-  <!-- 通知抽屉 -->
-  <el-drawer v-model="notificationDrawer" title="通知中心" direction="rtl" size="400px">
-    <div class="notifications-list">
-      <div v-for="notification in notifications" :key="notification.id" class="notification-item"
-        :class="`notification-${notification.type}`">
-
-        <div class="notification-content">
-          <h4>{{ notification.title }}</h4>
-          <p>{{ notification.message }}</p>
-          <span class="notification-time">{{ notification.time }}</span>
-        </div>
-      </div>
-    </div>
-  </el-drawer>
 </template>
 
 <script setup>
@@ -126,9 +102,8 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Setting, Odometer, Monitor, Medal, DataAnalysis, Tools, Bell,
-  Expand, Fold, User, ArrowDown, Warning, InfoFilled,
-  SuccessFilled, CircleCloseFilled
+  Setting, Odometer, Medal, DataAnalysis,
+  Expand, Fold, User, Tools, Histogram  // 使用确保存在的图标
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 
@@ -140,30 +115,6 @@ const isCollapsed = ref(false)
 const notificationDrawer = ref(false)
 const userAvatar = ref('')
 
-//通知中心数据模拟
-const notifications = reactive([
-  {
-    id: 1,
-    type: 'warning',
-    title: '设备警告',
-    message: '包装机1温度过高，请及时检查',
-    time: '5分钟前'
-  },
-  {
-    id: 2,
-    type: 'info',
-    title: '生产完成',
-    message: '批次BATCH-001已完成生产',
-    time: '10分钟前'
-  },
-  {
-    id: 3,
-    type: 'success',
-    title: '质量检测',
-    message: '今日质量检测全部通过',
-    time: '1小时前'
-  }
-])
 
 const activePath = computed(() => route.path)
 
@@ -209,6 +160,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 样式保持不变 */
 .app-layout {
   height: 100vh;
 }
@@ -226,11 +178,6 @@ onMounted(() => {
   justify-content: center;
   padding: 0 20px;
   border-bottom: 1px solid #333;
-}
-
-.logo-img {
-  height: 32px;
-  margin-right: 10px;
 }
 
 .logo-text {
@@ -278,10 +225,6 @@ onMounted(() => {
   gap: 20px;
 }
 
-.notification-badge {
-  cursor: pointer;
-}
-
 .user-info {
   display: flex;
   align-items: center;
@@ -304,59 +247,6 @@ onMounted(() => {
 .main-content {
   padding: 0;
   overflow-y: auto;
-}
-
-.notifications-list {
-  padding: 20px 0;
-}
-
-.notification-item {
-  display: flex;
-  padding: 15px;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background-color 0.3s;
-}
-
-.notification-item:hover {
-  background: #f9f9f9;
-}
-
-.notification-icon {
-  margin-right: 12px;
-  font-size: 20px;
-}
-
-.notification-warning .notification-icon {
-  color: #e6a23c;
-}
-
-.notification-info .notification-icon {
-  color: #409eff;
-}
-
-.notification-success .notification-icon {
-  color: #67c23a;
-}
-
-.notification-error .notification-icon {
-  color: #f56c6c;
-}
-
-.notification-content h4 {
-  margin: 0 0 5px 0;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.notification-content p {
-  margin: 0 0 8px 0;
-  font-size: 13px;
-  color: #666;
-}
-
-.notification-time {
-  font-size: 12px;
-  color: #999;
 }
 
 :deep(.el-breadcrumb__inner) {

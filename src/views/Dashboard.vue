@@ -1,270 +1,613 @@
 <template>
   <div class="data-dashboard">
-    <!-- 头部 -->
-    <header class="dashboard-header">
-      <h1>数据大屏</h1>
-      <div class="header-info">
-        <span class="current-time">{{ currentTime }}</span>
-        <el-button type="primary" size="small" @click="refreshData">
-          <el-icon><Refresh /></el-icon>刷新
-        </el-button>
-      </div>
-    </header>
+    <!-- 顶部标题栏 -->
+    <div class="header">
+      <h1 class="title">可视化展板-ECharts</h1>
+      <div class="time">{{ currentTime }}</div>
+    </div>
 
-    <section class="kpi-overview">
-      <div class="kpi-card">
-        <div class="kpi-content">
-          <div class="kpi-value">{{ todayProduction }}</div>
-          <div class="kpi-label">今日产量（件）</div>
+    <!-- 主要内容区域 -->
+    <div class="main-content">
+      <!-- 左侧面板 -->
+      <div class="left-panel">
+        <!-- 今日产量 -->
+        <div class="production-today">
+          <h2>今日产量</h2>
+          <div class="production-value">{{ todayProduction }}</div>
+          <div class="production-unit">件</div>
         </div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-content">
-          <div class="kpi-value">{{ equipmentOnline }}/{{ equipmentTotal }}</div>
-          <div class="kpi-label">设备在线/总数</div>
-        </div>
-      </div>
-    </section>
 
-    <main class="dashboard-main">
-      <!-- 左侧：设备卡片 -->
-      <section class="left-panel">
-        <div class="panel-card">
-          <h3>设备运行状态</h3>
-          <div class="equipment-grid">
-            <div
-              v-for="eq in equipmentList"
-              :key="eq.equipment_id"
-              class="equipment-item"
-              :class="'status-' + eq.equipment_status"
-              @click="openDrawer(eq)"
-            >
-              <div class="eq-name">{{ eq.equipment_name }}</div>
-              <div class="eq-type">{{ eq.equipment_type }}</div>
-              <div class="eq-status">{{ statusMap[eq.equipment_status] }}</div>
-              <div class="eq-loc">{{ eq.location }}</div>
+        <!-- 设备运行状态 -->
+        <div class="status-panel">
+          <h2>设备运行状态</h2>
+          <div class="status-grid">
+            <div class="status-item">
+              <div class="status-value">{{ deviceStatus.running }}</div>
+              <div class="status-label">运行</div>
+            </div>
+            <div class="status-item">
+              <div class="status-value">{{ deviceStatus.idle }}</div>
+              <div class="status-label">空闲</div>
+            </div>
+            <div class="status-item">
+              <div class="status-value">{{ deviceStatus.downtime }}</div>
+              <div class="status-label">停机</div>
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- 右侧：实时趋势 + 报警 -->
-      <section class="right-panel">
-        <!-- 实时趋势（60 分钟） -->
-        <div class="panel-card">
-          <h3>实时趋势（最近 60 分钟）</h3>
-          <div ref="trendChartRef" class="chart-wrap"></div>
+        <!-- 生产趋势图 -->
+        <div class="chart-container">
+          <h2>生产趋势</h2>
+          <div ref="productionTrendChart" class="chart"></div>
+        </div>
+      </div>
+
+      <!-- 中间面板 -->
+      <div class="center-panel">
+        <!-- 设备类型故障次数柱状图 -->
+        <div class="chart-container">
+          <h2>设备类型故障次数</h2>
+          <div ref="deviceFaultChart" class="chart"></div>
         </div>
 
-        <!-- 报警列表（alarm_record） -->
-        <div class="panel-card">
-          <h3>实时报警</h3>
-          <div class="alarm-list">
-            <div
-              v-for="al in alarmList"
-              :key="al.alarm_id"
-              class="alarm-item"
-              :class="'level-' + al.alarm_level"
-            >
-              <div class="alarm-code">{{ al.alarm_code }}</div>
-              <div class="alarm-desc">{{ al.alarm_detail }}</div>
-              <div class="alarm-time">{{ al.alarm_time }}</div>
-            </div>
-          </div>
+        <!-- 故障设备详情表格 -->
+        <div class="data-table">
+          <h2>故障设备详情</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>设备类型</th>
+                <th>设备名称</th>
+                <th>故障次数</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in faultDeviceList" :key="index">
+                <td>{{ item.type }}</td>
+                <td>{{ item.name }}</td>
+                <td :class="getFaultClass(item.count)">{{ item.count }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </section>
-    </main>
+      </div>
 
-    <!-- 抽屉：单设备实时数据 -->
-    <el-drawer
-      v-model="drawerVisible"
-      :title="`${activeDevice?.equipment_name} 实时数据`"
-      direction="rtl"
-      size="50%"
-    >
-      <div ref="deviceChartRef" class="device-chart"></div>
-    </el-drawer>
+      <!-- 右侧面板 -->
+      <div class="right-panel">
+        <!-- 设备故障趋势图 -->
+        <div class="chart-container">
+          <h2>设备故障趋势</h2>
+          <div ref="faultTrendChart" class="chart"></div>
+        </div>
+
+        <!-- 设备运行率饼图 -->
+        <div class="chart-container">
+          <h2>设备运行率</h2>
+          <div ref="operationRateChart" class="chart"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, onUnmounted, nextTick } from 'vue'
-import * as echarts from 'echarts'
-import { ElMessage } from 'element-plus'
-import { Refresh } from '@element-plus/icons-vue'
+<script>
+import * as echarts from 'echarts';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 
-/* --------- 常量 --------- */
-const statusMap = {
-  normal: '正常',
-  fault: '故障',
-  repair: '维修中'
-}
-const typeMap = {
-  injection: '注塑机',
-  screen: '丝印机',
-  spray: '喷漆机',
-  hot: '烫金机'
-}
+export default {
+  name: 'DataDashboard',
+  setup() {
+    const currentTime = ref('');
+    const productionTrendChart = ref(null);
+    const deviceFaultChart = ref(null);
+    const faultTrendChart = ref(null);
+    const operationRateChart = ref(null);
 
-/* --------- 响应式数据 --------- */
-const currentTime = ref('')
-const todayProduction = ref(0)
-const equipmentOnline = ref(0)
-const equipmentTotal = ref(0)
+    // 修改设备状态为三种状态：运行、空闲、停机
+    const deviceStatus = ref({
+      running: 42,
+      idle: 8,
+      downtime: 5 // 停机状态
+    });
 
-const equipmentList = ref([])     // equipment 表
-const alarmList = ref([])         // alarm_record 表
-const trendChartRef = ref(null)
-const deviceChartRef = ref(null)
+    const todayProduction = ref(1258);
 
-let trendChart = null
-let deviceChart = null
+    const deviceFaultData = ref([
+      { type: '注塑机', count: 15 },
+      { type: '丝印机', count: 8 },
+      { type: '喷漆机', count: 12 },
+      { type: '烫金机', count: 5 }
+    ]);
 
-/* --------- 抽屉 --------- */
-const drawerVisible = ref(false)
-const activeDevice = ref(null)
+    const faultDeviceList = ref([
+      { type: '注塑机', name: '注塑机-01', count: 5 },
+      { type: '注塑机', name: '注塑机-03', count: 4 },
+      { type: '喷漆机', name: '喷漆机-02', count: 6 },
+      { type: '丝印机', name: '丝印机-01', count: 3 },
+      { type: '烫金机', name: '烫金机-01', count: 2 }
+    ]);
 
-/* --------- 工具函数 --------- */
-const $get = url => fetch(url).then(r => r.json())
+    // 设备故障趋势数据
+    const faultTrendData = ref([
+      { month: '1月', count: 12 },
+      { month: '2月', count: 15 },
+      { month: '3月', count: 8 },
+      { month: '4月', count: 10 },
+      { month: '5月', count: 7 },
+      { month: '6月', count: 9 }
+    ]);
 
-/* --------- 生命周期 --------- */
-onMounted(async () => {
-  // 实时时钟
-  setInterval(() => {
-    currentTime.value = new Date().toLocaleString()
-  }, 1000)
+    let productionTrendInstance = null;
+    let deviceFaultInstance = null;
+    let faultTrendInstance = null;
+    let operationRateInstance = null;
 
-  // 今日产量（production_data 聚合）
-  const prodRes = await $get('/api/production_data/today')
-  todayProduction.value = prodRes.data.reduce((s, d) => s + d.production_quantity, 0)
+    // 更新时间
+    const updateTime = () => {
+      const now = new Date();
+      currentTime.value = now.toLocaleString();
+    };
 
-  // 设备列表
-  const eqRes = await $get('/api/equipment')
-  equipmentList.value = eqRes.data
-  equipmentTotal.value = eqRes.data.length
-  equipmentOnline.value = eqRes.data.filter(e => e.equipment_status === 'normal').length
+    // 初始化图表
+    const initCharts = () => {
+      // 生产趋势图
+      productionTrendInstance = echarts.init(productionTrendChart.value);
+      productionTrendInstance.setOption({
+        tooltip: {
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          data: ['1月', '2月', '3月', '4月', '5月', '6月'],
+          axisLine: {
+            lineStyle: {
+              color: '#4fc3f7'
+            }
+          },
+          axisLabel: {
+            color: '#ffffff'
+          }
+        },
+        yAxis: {
+          type: 'value',
+          axisLine: {
+            lineStyle: {
+              color: '#4fc3f7'
+            }
+          },
+          axisLabel: {
+            color: '#ffffff'
+          },
+          splitLine: {
+            lineStyle: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        },
+        series: [{
+          data: [120, 132, 101, 134, 90, 230],
+          type: 'line',
+          smooth: true,
+          lineStyle: {
+            color: '#4fc3f7',
+            width: 2
+          },
+          itemStyle: {
+            color: '#4fc3f7'
+          },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(79, 195, 247, 0.5)' },
+              { offset: 1, color: 'rgba(79, 195, 247, 0.1)' }
+            ])
+          }
+        }]
+      });
 
-  // 报警
-  const alarmRes = await $get('/api/alarm_record/latest')
-  alarmList.value = alarmRes.data.slice(0, 8)
+      // 设备类型故障次数柱状图
+      deviceFaultInstance = echarts.init(deviceFaultChart.value);
+      const maxFault = Math.max(...deviceFaultData.value.map(item => item.count));
+      deviceFaultInstance.setOption({
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          }
+        },
+        xAxis: {
+          type: 'category',
+          data: deviceFaultData.value.map(item => item.type),
+          axisLine: {
+            lineStyle: {
+              color: '#4fc3f7'
+            }
+          },
+          axisLabel: {
+            color: '#ffffff'
+          }
+        },
+        yAxis: {
+          type: 'value',
+          axisLine: {
+            lineStyle: {
+              color: '#4fc3f7'
+            }
+          },
+          axisLabel: {
+            color: '#ffffff'
+          },
+          splitLine: {
+            lineStyle: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        },
+        series: [{
+          data: deviceFaultData.value.map(item => ({
+            value: item.count,
+            itemStyle: {
+              color: item.count === maxFault ? '#f44336' : '#4fc3f7'
+            }
+          })),
+          type: 'bar',
+          barWidth: '40%'
+        }]
+      });
 
-  // 全局趋势
-  trendChart = echarts.init(trendChartRef.value)
-  const trendRes = await $get('/api/realtime/trend/global')
-  trendChart.setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { left: 40, top: 20, right: 20, bottom: 20 },
-    xAxis: { type: 'time', boundaryGap: false },
-    yAxis: { type: 'value', name: '产量(件/小时)' },
-    series: [{
-      type: 'line',
-      smooth: true,
-      symbol: 'none',
-      itemStyle: { color: '#00ccff' },
-      areaStyle: { opacity: 0.15 },
-      data: trendRes.data
-    }]
-  })
-})
+      // 设备故障趋势图
+      faultTrendInstance = echarts.init(faultTrendChart.value);
+      faultTrendInstance.setOption({
+        tooltip: {
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          data: faultTrendData.value.map(item => item.month),
+          axisLine: {
+            lineStyle: {
+              color: '#4fc3f7'
+            }
+          },
+          axisLabel: {
+            color: '#ffffff'
+          }
+        },
+        yAxis: {
+          type: 'value',
+          axisLine: {
+            lineStyle: {
+              color: '#4fc3f7'
+            }
+          },
+          axisLabel: {
+            color: '#ffffff'
+          },
+          splitLine: {
+            lineStyle: {
+              color: 'rgba(255, 255, 255, 0.1)'
+            }
+          }
+        },
+        series: [{
+          data: faultTrendData.value.map(item => item.count),
+          type: 'line',
+          smooth: true,
+          lineStyle: {
+            color: '#ff9800',
+            width: 2
+          },
+          itemStyle: {
+            color: '#ff9800'
+          },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              { offset: 0, color: 'rgba(255, 152, 0, 0.5)' },
+              { offset: 1, color: 'rgba(255, 152, 0, 0.1)' }
+            ])
+          }
+        }]
+      });
 
-onUnmounted(() => {
-  trendChart?.dispose()
-  deviceChart?.dispose()
-})
+      // 设备运行率饼图
+      operationRateInstance = echarts.init(operationRateChart.value);
+      const totalDevices = deviceStatus.value.running + deviceStatus.value.idle + 
+                          deviceStatus.value.downtime;
+      operationRateInstance.setOption({
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b}: {c} ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          right: 10,
+          top: 'center',
+          textStyle: {
+            color: '#ffffff'
+          }
+        },
+        series: [{
+          name: '设备状态',
+          type: 'pie',
+          radius: ['50%', '70%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 10,
+            borderColor: '#0f0f0f',
+            borderWidth: 2
+          },
+          label: {
+            show: false,
+            position: 'center'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: '18',
+              fontWeight: 'bold',
+              color: '#ffffff'
+            }
+          },
+          labelLine: {
+            show: false
+          },
+          data: [
+            { 
+              value: deviceStatus.value.running, 
+              name: '运行',
+              itemStyle: { color: '#4caf50' }
+            },
+            { 
+              value: deviceStatus.value.idle, 
+              name: '空闲',
+              itemStyle: { color: '#2196f3' }
+            },
+            { 
+              value: deviceStatus.value.downtime, 
+              name: '停机',
+              itemStyle: { color: '#f44336' }
+            }
+          ]
+        }]
+      });
+    };
 
-/* --------- 抽屉：单设备趋势 --------- */
-async function openDrawer(device) {
-  activeDevice.value = device
-  drawerVisible.value = true
-  await nextTick()
-  deviceChart = echarts.init(deviceChartRef.value)
-  const res = await $get(`/api/realtime/trend/${device.equipment_type}/${device.equipment_id}`)
-  deviceChart.setOption({
-    tooltip: { trigger: 'axis' },
-    grid: { left: 40, top: 20, right: 20, bottom: 20 },
-    xAxis: { type: 'time', boundaryGap: false },
-    yAxis: { type: 'value', name: '实时值' },
-    series: [{
-      type: 'line',
-      smooth: true,
-      symbol: 'none',
-      color: '#409eff',
-      areaStyle: { opacity: 0.15 },
-      data: res.data
-    }]
-  })
-}
+    // 获取故障次数样式类
+    const getFaultClass = (count) => {
+      if (count >= 5) return 'danger';
+      if (count >= 3) return 'warning';
+      return 'normal';
+    };
+
+    // 调整图表大小
+    const resizeCharts = () => {
+      productionTrendInstance?.resize();
+      deviceFaultInstance?.resize();
+      faultTrendInstance?.resize();
+      operationRateInstance?.resize();
+    };
+
+    onMounted(() => {
+      updateTime();
+      setInterval(updateTime, 1000);
+      initCharts();
+      window.addEventListener('resize', resizeCharts);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('resize', resizeCharts);
+      productionTrendInstance?.dispose();
+      deviceFaultInstance?.dispose();
+      faultTrendInstance?.dispose();
+      operationRateInstance?.dispose();
+    });
+
+    return {
+      currentTime,
+      productionTrendChart,
+      deviceFaultChart,
+      faultTrendChart,
+      operationRateChart,
+      deviceStatus,
+      todayProduction,
+      deviceFaultData,
+      faultDeviceList,
+      getFaultClass
+    };
+  }
+};
 </script>
 
 <style scoped>
 .data-dashboard {
-  padding: 20px;
-  background: #0a0a0a;
-  color: #fff;
-  font-family: 'Microsoft YaHei', sans-serif;
+  font-family: 'Arial', sans-serif;
+  background-color: #0f0f0f;
+  color: #ffffff;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
-.dashboard-header {
+
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  padding: 15px 30px;
+  background-color: #060A3A;
+  border-bottom: 1px solid rgba(79, 195, 247, 0.3);
 }
-.kpi-overview {
+
+.header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.time {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.main-content {
   display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-.kpi-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
+  flex: 1;
   padding: 20px;
+  gap: 20px;
+  overflow: hidden;
+  background-color: #060A3A;
+}
+
+.left-panel, .center-panel, .right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.left-panel {
   flex: 1;
 }
-.dashboard-main {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+
+.center-panel {
+  flex: 1.5;
 }
-.panel-card {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 12px;
-  padding: 20px;
+
+.right-panel {
+  flex: 1;
 }
-.equipment-grid {
+
+.chart-container {
+  background-color: #0D0F49;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.chart {
+  flex: 1;
+  min-height: 200px;
+}
+
+.production-today {
+  background-color: #0D0F49;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.production-today h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.production-value {
+  font-size: 48px;
+  font-weight: bold;
+  color: #FDE677;
+  margin: 10px 0;
+}
+
+.production-unit {
+  font-size: 16px;
+  color: #b0bec5;
+}
+
+.status-panel {
+  background-color: #0D0F49;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.status-panel h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.status-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr); /* 修改为3列 */
   gap: 15px;
 }
-.equipment-item {
-  padding: 15px;
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: rgba(15, 23, 42, 0.5);
+  border-radius: 6px;
+}
+
+.status-value {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.status-label {
+  font-size: 14px;
+  color: #b0bec5;
+}
+
+.data-table {
+  background-color: #0D0F49;
   border-radius: 8px;
-  border: 1px solid #333;
-  cursor: pointer;
-  transition: transform 0.2s;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  flex: 1;
 }
-.equipment-item:hover {
-  transform: translateY(-2px);
+
+.data-table h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
 }
-.status-normal { border-left: 4px solid #67c23a; }
-.status-fault  { border-left: 4px solid #f56c6c; }
-.status-repair { border-left: 4px solid #e6a23c; }
-.alarm-list {
-  max-height: 300px;
-  overflow-y: auto;
-}
-.alarm-item {
-  padding: 12px;
-  margin-bottom: 8px;
-  border-left: 4px solid;
-  border-radius: 4px;
-}
-.level-致命 { border-color: #f56c6c; background: rgba(245,108,108,.1); }
-.level-严重 { border-color: #e6a23c; background: rgba(230,162,60,.1); }
-.level-警告 { border-color: #409eff; background: rgba(64,158,255,.1); }
-.chart-wrap, .device-chart {
+
+table {
   width: 100%;
-  height: 250px;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+  background-color: rgba(79, 195, 247, 0.2);
+  color: #4fc3f7;
+}
+
+tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.normal {
+  color: #4caf50;
+}
+
+.warning {
+  color: #ff9800;
+}
+
+.danger {
+  color: #f44336;
 }
 </style>

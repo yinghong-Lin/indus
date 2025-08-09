@@ -1,7 +1,6 @@
 import Mock from "mockjs"
 
 // 导入各模块的 Mock 数据
-import "./modules/fault"
 import "./modules/equipment"
 import "./modules/home"
 import "./modules/maintenance"

@@ -1,25 +1,22 @@
 <template>
   <div class="maintenance-page">
-    <!-- 页面头部 -->
+    <!-- 页面头部  -->
     <div class="page-header">
       <h1>设备维修 & 故障管理</h1>
       <div class="header-actions">
         <el-button type="primary" @click="refreshData">
           <el-icon><Refresh /></el-icon> 刷新
         </el-button>
-        <el-button type="danger" @click="showFaultDialog = true">
-          <el-icon><Warning /></el-icon> 新增故障
-        </el-button>
-        <el-button type="success" @click="showAddDialog = true">
+        <el-button type="success" @click="showAddDialog = true; editingMaintenance = null">
           <el-icon><Plus /></el-icon> 新增维修
         </el-button>
-        <el-button type="warning" @click="exportReport">
+        <el-button type="warning" @click="showExportDialog = true">
           <el-icon><Download /></el-icon> 导出
         </el-button>
       </div>
     </div>
 
-    <!-- 统计卡片 -->
+    <!-- 统计卡片  -->
     <div class="stats-overview">
       <div class="stat-card">
         <div class="stat-icon total"><el-icon><Warning /></el-icon></div>
@@ -44,16 +41,19 @@
       </div>
     </div>
 
-    <!-- 故障列表 -->
+    <!-- 故障列表  -->
     <div class="section">
       <h3>故障列表</h3>
-      <el-table :data="pagedFaults" stripe style="width:100%; margin-bottom:10px">
+      <el-table :data="pagedFaults" stripe style="width: 100%; margin-bottom: 10px">
         <el-table-column prop="fault_id" label="故障ID" width="90" />
-        <el-table-column prop="equipment_name" label="设备" width="140"/>
+        <el-table-column prop="equipment_name" label="设备" width="140" />
         <el-table-column prop="fault_code" label="故障代码" width="120" />
         <el-table-column prop="fault_description" label="故障描述" min-width="180" show-overflow-tooltip />
         <el-table-column prop="fault_time" label="发生时间" width="180">
           <template #default="scope">{{ formatTime(scope.row.fault_time) }}</template>
+        </el-table-column>
+        <el-table-column prop="updated_at" label="更新时间" width="180">
+          <template #default="scope">{{ formatTime(scope.row.updated_at) }}</template>
         </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="scope">
@@ -62,20 +62,20 @@
             </el-tag>
           </template>
         </el-table-column>
-        <!-- 故障列表操作列 -->
-<el-table-column label="操作" width="230" >
-  <template #default="scope">
-    <el-button size="small" type="text" @click="editFault(scope.row)">
-      编辑
-    </el-button>
-    <el-button size="small" type="text" @click="deleteFault(scope.row)">
-      删除
-    </el-button>
-    <el-button size="small" type="text" @click="toggleResolve(scope.row)">
-      {{ scope.row.is_resolved ? '重新打开' : '标记解决' }}
-    </el-button>
-  </template>
-</el-table-column>
+        <!-- 故障列表操作列  -->
+        <el-table-column label="操作" width="230">
+          <template #default="scope">
+            <el-button size="small" type="text" @click="editFault(scope.row)">
+              编辑
+            </el-button>
+            <el-button size="small" type="text" @click="deleteFault(scope.row)">
+              删除
+            </el-button>
+            <el-button size="small" type="text" @click="toggleResolve(scope.row)">
+              {{ scope.row.is_resolved ? '重新打开' : '标记解决' }}
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
       <el-pagination
         background
@@ -87,34 +87,36 @@
       />
     </div>
 
-    <!-- 维修记录 -->
+    <!-- 维修记录  -->
     <div class="section">
       <h3>维修记录</h3>
-      <el-table :data="pagedRecords" stripe style="width:100%">
+      <el-table :data="pagedRecords" stripe style="width: 100%">
         <el-table-column prop="maintenance_id" label="维修ID" width="90" />
-        <el-table-column prop="equipment_name" label="设备" width="140"/>
-        <el-table-column prop="fault_code" label="关联故障" width="120">
-          <template #default="scope">{{ scope.row.fault_code || '-' }}</template>
+        <el-table-column prop="equipment_name" label="设备名称" width="140" />
+        <el-table-column prop="equipment_id" label="设备ID" width="120" />
+        <el-table-column prop="fault_id" label="关联故障ID" width="120">
+          <template #default="scope">{{ scope.row.fault_id || '-' }}</template>
         </el-table-column>
         <el-table-column prop="maintenance_type" label="维修类型" width="120" />
-        <el-table-column prop="maintenance_time" label="时间" width="180">
+        <el-table-column prop="maintenance_status" label="维修状态" width="90" />
+        <el-table-column prop="maintenance_time" label="维修时间" width="180">
           <template #default="scope">{{ formatTime(scope.row.maintenance_time) }}</template>
         </el-table-column>
         <el-table-column prop="maintenance_measures" label="措施" min-width="180" show-overflow-tooltip />
-       <!-- 维修记录操作列 -->
-<el-table-column label="操作" width="200">
-  <template #default="scope">
-    <el-button size="small" type="text" @click="editMaintenance(scope.row)">
-      编辑
-    </el-button>
-    <el-button size="small" type="text" @click="deleteMaintenance(scope.row)">
-      删除
-    </el-button>
-    <el-button size="small" type="text" @click="viewDetail(scope.row)">
-      详情
-    </el-button>
-  </template>
-</el-table-column>
+        <el-table-column prop="updated_at" label="更新时间" width="180">
+          <template #default="scope">{{ formatTime(scope.row.updated_at) }}</template>
+        </el-table-column>
+        <!-- 维修记录操作列  -->
+        <el-table-column label="操作" width="200">
+          <template #default="scope">
+            <el-button size="small" type="text" @click="editMaintenance(scope.row)">
+              编辑
+            </el-button>
+            <el-button size="small" type="text" @click="deleteMaintenance(scope.row)">
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
       <el-pagination
         background
@@ -126,97 +128,104 @@
       />
     </div>
 
-    <!-- 新增故障对话框 -->
-    <el-dialog v-model="showFaultDialog" title="新增故障" width="480">
-      <el-form :model="faultForm" label-width="100">
-        <el-form-item label="设备">
-          <el-select v-model="faultForm.equipment_id" placeholder="请选择">
-            <el-option
-              v-for="e in equipmentList"
-              :key="e.equipment_id"
-              :label="e.equipment_name"
-              :value="e.equipment_id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="故障代码">
-          <el-input v-model="faultForm.fault_code" />
-        </el-form-item>
-        <el-form-item label="故障描述">
-          <el-input v-model="faultForm.fault_description" type="textarea" rows="2" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="showFaultDialog = false">取消</el-button>
-        <el-button type="danger" @click="submitFault">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 新增维修对话框 -->
-    <el-dialog v-model="showAddDialog" title="新增维修记录" width="520">
+    <!-- 新增/编辑维修对话框  -->
+    <el-dialog 
+      v-model="showAddDialog" 
+      :title="editingMaintenance ? '编辑维修记录' : '新增维修记录'" 
+      width="520"
+      @close="handleDialogClose"
+    >
       <el-form :model="form" label-width="100">
-        <el-form-item label="设备">
-          <el-select v-model="form.equipment_id" placeholder="请选择">
-            <el-option
-              v-for="e in equipmentList"
-              :key="e.equipment_id"
-              :label="e.equipment_name"
-              :value="e.equipment_id"
-            />
-          </el-select>
+        <el-form-item label="设备" prop="equipment_name" :rules="{ required: true, message: '请输入设备名称', trigger: 'blur' }">
+          <el-input v-model="form.equipment_name" placeholder="请输入设备名称" />
         </el-form-item>
-        <el-form-item label="关联故障">
-          <el-select v-model="form.fault_id" clearable placeholder="不关联则留空">
-            <el-option
-              v-for="f in faults.filter(f => !f.is_resolved)"
-              :key="f.fault_id"
-              :label="`${f.fault_code} - ${f.fault_description}`"
-              :value="f.fault_id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="故障代码">
-          <el-input v-model="form.fault_code" placeholder="如 F-001" />
-        </el-form-item>
-        <el-form-item label="故障描述">
-          <el-input v-model="form.fault_description" type="textarea" rows="2" />
+        <el-form-item label="关联故障时间">
+          <el-date-picker v-model="form.fault_time" type="datetime" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择关联故障时间" />
         </el-form-item>
         <el-form-item label="维修类型">
           <el-select v-model="form.maintenance_type" placeholder="请选择">
             <el-option label="故障维修" value="故障维修" />
             <el-option label="预防性维护" value="预防性维护" />
+            <el-option label="例行检查" value="例行检查" />
+            <el-option label="应急抢修" value="应急抢修" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="维修状态" v-if="editingMaintenance">
+          <el-select v-model="form.maintenance_status" placeholder="请选择">
+            <el-option label="已完成" value="已完成" />
+            <el-option label="未完成" value="未完成" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="维修时间">
+          <el-date-picker v-model="form.maintenance_time" type="datetime" format="YYYY-MM-DD HH:mm:ss" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择维修时间" />
         </el-form-item>
         <el-form-item label="维修措施">
           <el-input v-model="form.maintenance_measures" type="textarea" rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showAddDialog = false">取消</el-button>
+        <el-button @click="handleDialogClose">取消</el-button>
         <el-button type="primary" @click="submitAdd">确定</el-button>
       </template>
     </el-dialog>
 
-    <!-- 维修详情对话框 -->
-    <el-dialog v-model="showDetailDialog" title="维修详情" width="520">
-      <el-descriptions :column="1" border>
-        <el-descriptions-item label="维修ID">{{ detail.maintenance_id }}</el-descriptions-item>
-        <el-descriptions-item label="设备">{{ detail.equipment_name }}</el-descriptions-item>
-        <el-descriptions-item label="故障代码">{{ detail.fault_code || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="故障描述">{{ detail.fault_description }}</el-descriptions-item>
-        <el-descriptions-item label="维修类型">{{ detail.maintenance_type }}</el-descriptions-item>
-        <el-descriptions-item label="时间">{{ formatTime(detail.maintenance_time) }}</el-descriptions-item>
-        <el-descriptions-item label="措施">{{ detail.maintenance_measures }}</el-descriptions-item>
-      </el-descriptions>
+    <!-- 编辑故障描述对话框  -->
+    <el-dialog v-model="showEditFaultDialog" title="编辑故障描述" width="400">
+      <el-form :model="faultForm" label-width="80">
+        <el-form-item label="故障ID">
+          <el-input v-model="faultForm.fault_id" disabled />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="faultForm.fault_description" type="textarea" rows="3" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="closeEditFaultDialog">取消</el-button>
+        <el-button type="primary" @click="submitEditFault">确定</el-button>
+      </template>
     </el-dialog>
+
+    <!-- 导出配置对话框 -->
+    <el-dialog 
+      v-model="showExportDialog" 
+      title="导出Excel数据" 
+      width="400"
+    >
+      <el-form :model="exportForm" label-width="100">
+        <el-form-item label="导出类型" prop="exportType" :rules="{ required: true, message: '请选择导出类型', trigger: 'change' }">
+          <el-select v-model="exportForm.exportType" placeholder="请选择">
+            <el-option label="故障列表" value="faults" />
+            <el-option label="维修记录" value="maintenances" />
+            <el-option label="全部数据" value="all" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="导出范围" prop="exportRange" :rules="{ required: true, message: '请选择导出范围', trigger: 'change' }">
+          <el-select v-model="exportForm.exportRange" placeholder="请选择">
+            <el-option label="当前页" value="currentPage" />
+            <el-option label="全部数据" value="allData" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="showExportDialog = false">取消</el-button>
+        <el-button type="primary" @click="handleExport">确定导出</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 导出加载提示 -->
+    <el-loading v-if="isExporting" target=".maintenance-page" text="正在导出数据，请稍候..."/>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { faultAPI }       from '../api/fault'
+import { ElMessage, ElMessageBox, ElLoading } from 'element-plus'
+import { Refresh, Plus, Download, Warning, Clock, CircleCheck } from '@element-plus/icons-vue'
+import { faultAPI } from '../api/fault'
 import { maintenanceAPI } from '../api/maintenance'
+// 引入Excel处理库
+import * as XLSX from 'xlsx'
+import { format } from 'date-fns'
 
 /* ---------------- 分页 & 数据 ---------------- */
 const faultPageSize = 5
@@ -224,51 +233,45 @@ const faultCurrentPage = ref(1)
 const maintenancePageSize = 5
 const maintenanceCurrentPage = ref(1)
 
-const faults     = ref([])
-const records    = ref([])
-const equipmentList = ref([])
+const faults = ref([])
+const records = ref([])
 
-const keyword = ref('')
-const showFaultDialog = ref(false)
-const showAddDialog   = ref(false)
-const showDetailDialog= ref(false)
+const showAddDialog = ref(false)
+const showEditFaultDialog = ref(false)
+const showExportDialog = ref(false)
+const isExporting = ref(false)
+
+/* ---------------- 导出表单配置 ---------------- */
+const exportForm = ref({
+  exportType: 'all',       // faults, maintenances, all
+  exportRange: 'allData'   // currentPage, allData
+})
 
 /* ---------------- 表单 & 编辑标识 ---------------- */
-const faultForm = ref({
-  equipment_id: '',
-  fault_code: '',
-  fault_description: '',
-  fault_time: new Date().toISOString()
-})
-const editingFault = ref(null)   // 正在编辑的故障对象
-
 const form = ref({
-  equipment_id: '',
-  fault_id: '',
-  fault_code: '',
-  fault_description: '',
+  maintenance_id: null,
+  equipment_name: '',
+  fault_id: null,
+  fault_time: null,
   maintenance_type: '',
+  maintenance_status: '',
+  maintenance_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
   maintenance_measures: ''
 })
-const editingMaintenance = ref(null) // 正在编辑的维修对象
+const editingMaintenance = ref(null)
 
-const detail = ref({})
+const faultForm = ref({
+  fault_id: '',
+  fault_description: ''
+})
+const editingFault = ref(null)
 
 /* ---------------- 计算属性 ---------------- */
 const stats = computed(() => {
-  const total    = faults.value.length
+  const total = faults.value.length
   const resolved = faults.value.filter(f => f.is_resolved).length
   return { total, resolved, pending: total - resolved }
 })
-
-const filteredRecords = computed(() =>
-  records.value.filter(r =>
-    r.equipment_name?.includes(keyword.value) ||
-    r.fault_code?.includes(keyword.value) ||
-    r.fault_description?.includes(keyword.value) ||
-    r.maintenance_measures?.includes(keyword.value)
-  )
-)
 
 const pagedFaults = computed(() => {
   const start = (faultCurrentPage.value - 1) * faultPageSize
@@ -276,102 +279,79 @@ const pagedFaults = computed(() => {
 })
 
 const pagedRecords = computed(() => {
+  if (!records.value) return []
   const start = (maintenanceCurrentPage.value - 1) * maintenancePageSize
-  return filteredRecords.value.slice(start, start + maintenancePageSize)
+  return records.value.slice(start, start + maintenancePageSize)
+})
+
+const filteredRecords = computed(() => {
+  if (!records.value) return []
+  return records.value
 })
 
 /* ---------------- 接口调用 ---------------- */
 const fetchData = async () => {
   try {
-    equipmentList.value = [
-      { equipment_id: 1, equipment_name: '注塑机1号' },
-      { equipment_id: 2, equipment_name: '喷漆机1号' },
-      { equipment_id: 3, equipment_name: '丝印机1号' },
-      { equipment_id: 4, equipment_name: '烫金机1号' }
-    ]
+    const { data: faultData } = await faultAPI.getFaultRecords({
+      page: faultCurrentPage.value,
+      page_size: faultPageSize
+    })
+    faults.value = faultData.Maintenances || []
 
-    const { data: faultRes = [] } = await faultAPI.getFaultRecords()
-    faults.value = faultRes
-
-    const { data: recordRes = [] } = await maintenanceAPI.getMaintenanceList()
-    records.value = recordRes
+    const { data: maintenanceData } = await maintenanceAPI.getMaintenanceList({
+      page: maintenanceCurrentPage.value,
+      page_size: maintenancePageSize
+    })
+    records.value = maintenanceData.Maintenances || []
   } catch (e) {
     ElMessage.error('拉取数据失败')
   }
 }
 
-/* ---------------- 故障操作 ---------------- */
-const submitFault = async () => {
-  if (!faultForm.value.equipment_id) return ElMessage.warning('请选择设备')
-  try {
-    const payload = {
-      ...faultForm.value,
-      fault_time: new Date().toISOString()
-    }
-    if (editingFault.value) {
-      // 编辑
-      await faultAPI.selectFault({ ...payload, fault_id: editingFault.value.fault_id })
-      ElMessage.success('故障已更新')
-    } else {
-      // 新增
-      await faultAPI.selectFault(payload)
-      ElMessage.success('已新增故障')
-    }
-    closeFaultDialog()
-    await fetchData()
-  } catch (e) {
-    ElMessage.error(editingFault.value ? '更新故障失败' : '新增故障失败')
-  }
-}
-
-const editFault = (row) => {
-  editingFault.value = row
-  faultForm.value = { ...row }
-  showFaultDialog.value = true
-}
-
-const deleteFault = async (row) => {
-  try {
-    await ElMessageBox.confirm('确认删除该故障记录吗？', '提示', { type: 'warning' })
-    await faultAPI.deleteFault(row.fault_id)
-    ElMessage.success('故障已删除')
-    await fetchData()
-  } catch (e) {
-    if (e !== 'cancel') ElMessage.error('删除故障失败')
-  }
-}
-
-const closeFaultDialog = () => {
-  showFaultDialog.value = false
-  editingFault.value = null
-  faultForm.value = { equipment_id: '', fault_code: '', fault_description: '', fault_time: new Date().toISOString() }
-}
-
 /* ---------------- 维修操作 ---------------- */
 const submitAdd = async () => {
-  if (!form.value.equipment_id) return ElMessage.warning('请选择设备')
+  if (!form.value.equipment_name || !form.value.maintenance_type || !form.value.maintenance_time || !form.value.maintenance_measures) {
+    return ElMessage.warning('请填写所有必填项')
+  }
   try {
     const payload = {
-      ...form.value,
-      maintenance_time: new Date().toISOString()
+      equipment_name: form.value.equipment_name,
+      fault_time: form.value.fault_time,
+      maintenance_type: form.value.maintenance_type,
+      maintenance_time: form.value.maintenance_time,
+      maintenance_measures: form.value.maintenance_measures
     }
+
     if (editingMaintenance.value) {
-      await maintenanceAPI.updateMaintenance({ ...payload, maintenance_id: editingMaintenance.value.maintenance_id })
+      payload.maintenance_id = form.value.maintenance_id
+      payload.fault_id = form.value.fault_id
+      payload.maintenance_status = form.value.maintenance_status
+      await maintenanceAPI.updateMaintenance(payload)
       ElMessage.success('维修记录已更新')
     } else {
       await maintenanceAPI.createMaintenance(payload)
       ElMessage.success('已新增维修记录')
     }
-    closeAddDialog()
+    handleDialogClose()
     await fetchData()
   } catch (e) {
+    console.error('Error submitting maintenance:', e)
     ElMessage.error(editingMaintenance.value ? '更新维修失败' : '新增维修失败')
   }
 }
 
 const editMaintenance = (row) => {
   editingMaintenance.value = row
-  form.value = { ...row }
+  form.value = {
+    maintenance_id: row.maintenance_id,
+    equipment_name: row.equipment_name,
+    fault_id: row.fault_id,
+    fault_time: row.fault_time ? formatTimeForInput(row.fault_time) : null,
+    maintenance_type: row.maintenance_type,
+    maintenance_status: row.maintenance_status,
+    maintenance_time: row.maintenance_time ? formatTimeForInput(row.maintenance_time) : null,
+    maintenance_measures: row.maintenance_measures
+  }
   showAddDialog.value = true
 }
 
@@ -386,48 +366,264 @@ const deleteMaintenance = async (row) => {
   }
 }
 
-const closeAddDialog = () => {
+const handleDialogClose = () => {
   showAddDialog.value = false
   editingMaintenance.value = null
   form.value = {
-    equipment_id: '',
-    fault_id: '',
-    fault_code: '',
-    fault_description: '',
+    maintenance_id: null,
+    equipment_name: '',
+    fault_id: null,
+    fault_time: null,
     maintenance_type: '',
+    maintenance_status: '',
+    maintenance_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
     maintenance_measures: ''
   }
 }
 
-/* ---------------- 故障状态切换 ---------------- */
-const toggleResolve = async (row) => {
+/* ---------------- 故障操作 ---------------- */
+const editFault = (row) => {
+  editingFault.value = row
+  faultForm.value = {
+    fault_id: row.fault_id,
+    fault_description: row.fault_description
+  }
+  showEditFaultDialog.value = true
+}
+
+const submitEditFault = async () => {
+  if (!faultForm.value.fault_description) {
+    return ElMessage.warning('故障描述不能为空')
+  }
   try {
-    await faultAPI.selectFault({
-      fault_id: row.fault_id,
-      is_resolved: !row.is_resolved
-    })
-    ElMessage.success(row.is_resolved ? '已重新打开' : '已标记解决')
+    await faultAPI.updateFaultDescription(faultForm.value.fault_id, faultForm.value.fault_description)
+    ElMessage.success('故障描述已更新')
+    closeEditFaultDialog()
     await fetchData()
   } catch (e) {
-    ElMessage.error('状态更新失败')
+    console.error('Error updating fault description:', e)
+    ElMessage.error('更新故障描述失败')
   }
 }
 
-/* ---------------- 维修详情 ---------------- */
-const viewDetail = async (row) => {
+const deleteFault = async (row) => {
   try {
-    const { data } = await maintenanceAPI.selectMaintenance(row.maintenance_id)
-    detail.value = data
-    showDetailDialog.value = true
+    await ElMessageBox.confirm('确认删除该故障记录吗？', '提示', { type: 'warning' })
+    await faultAPI.deleteFault(row.fault_id)
+    ElMessage.success('故障记录已删除')
+    await fetchData()
   } catch (e) {
-    ElMessage.error('获取详情失败')
+    if (e !== 'cancel') ElMessage.error('删除故障失败')
   }
+}
+
+const toggleResolve = async (row) => {
+  try {
+    const newStatus = !row.is_resolved
+    await faultAPI.updateFaultStatus(row.fault_id, newStatus)
+    ElMessage.success(`故障已${newStatus ? '标记解决' : '重新打开'}`)
+    await fetchData()
+  } catch (e) {
+    console.error('Error toggling fault status:', e)
+    ElMessage.error('更新故障状态失败')
+  }
+}
+
+const closeEditFaultDialog = () => {
+  showEditFaultDialog.value = false
+  editingFault.value = null
+  faultForm.value = {
+    fault_id: '',
+    fault_description: ''
+  }
+}
+
+/* ---------------- 导出功能实现 ---------------- */
+const handleExport = async () => {
+  isExporting.value = true
+  try {
+    // 根据选择获取需要导出的数据
+    let exportData = {}
+    
+    if (exportForm.value.exportType === 'faults' || exportForm.value.exportType === 'all') {
+      // 获取故障数据
+      const faultData = exportForm.value.exportRange === 'allData' 
+        ? await fetchAllFaults() 
+        : [...pagedFaults.value]
+      
+      // 格式化故障数据
+      const formattedFaults = faultData.map(fault => ({
+        '故障ID': fault.fault_id,
+        '设备': fault.equipment_name,
+        '故障代码': fault.fault_code,
+        '故障描述': fault.fault_description,
+        '发生时间': formatTime(fault.fault_time),
+        '采集时间': formatTime(fault.collection_time),
+        '更新时间': formatTime(fault.updated_at),
+        '状态': fault.is_resolved ? '已解决' : '待解决'
+      }))
+      
+      exportData['故障列表'] = formattedFaults
+    }
+    
+    if (exportForm.value.exportType === 'maintenances' || exportForm.value.exportType === 'all') {
+      // 获取维修记录数据
+      const maintenanceData = exportForm.value.exportRange === 'allData'
+        ? await fetchAllMaintenances()
+        : [...pagedRecords.value]
+      
+      // 格式化维修记录数据
+      const formattedMaintenances = maintenanceData.map(record => ({
+        '维修ID': record.maintenance_id,
+        '设备名称': record.equipment_name,
+        '设备ID': record.equipment_id,
+        '关联故障ID': record.fault_id || '-',
+        '维修类型': record.maintenance_type,
+        '维修状态': record.maintenance_status,
+        '维修时间': formatTime(record.maintenance_time),
+        '措施': record.maintenance_measures,
+        '更新时间': formatTime(record.updated_at)
+      }))
+      
+      exportData['维修记录'] = formattedMaintenances
+    }
+    
+    // 生成并下载Excel文件
+    generateExcelFile(exportData)
+    
+    ElMessage.success('Excel数据导出成功')
+    showExportDialog.value = false
+  } catch (error) {
+    console.error('导出失败:', error)
+    ElMessage.error('数据导出失败，请重试')
+  } finally {
+    isExporting.value = false
+  }
+}
+
+// 获取所有故障数据（分页加载）
+const fetchAllFaults = async () => {
+  let allFaults = []
+  let currentPage = 1
+  const pageSize = 100  // 每次请求100条
+  
+  while (true) {
+    try {
+      const { data } = await faultAPI.getFaultRecords({
+        page: currentPage,
+        page_size: pageSize
+      })
+      
+      const pageData = data.Maintenances || []
+      allFaults = [...allFaults, ...pageData]
+      
+      // 如果当前页数据小于pageSize，说明已经获取完所有数据
+      if (pageData.length < pageSize) {
+        break
+      }
+      
+      currentPage++
+    } catch (error) {
+      console.error('获取故障数据失败:', error)
+      throw new Error('获取故障数据失败')
+    }
+  }
+  
+  return allFaults
+}
+
+// 获取所有维修记录（分页加载）
+const fetchAllMaintenances = async () => {
+  let allMaintenances = []
+  let currentPage = 1
+  const pageSize = 100  // 每次请求100条
+  
+  while (true) {
+    try {
+      const { data } = await maintenanceAPI.getMaintenanceList({
+        page: currentPage,
+        page_size: pageSize
+      })
+      
+      const pageData = data.Maintenances || []
+      allMaintenances = [...allMaintenances, ...pageData]
+      
+      // 如果当前页数据小于pageSize，说明已经获取完所有数据
+      if (pageData.length < pageSize) {
+        break
+      }
+      
+      currentPage++
+    } catch (error) {
+      console.error('获取维修记录失败:', error)
+      throw new Error('获取维修记录失败')
+    }
+  }
+  
+  return allMaintenances
+}
+
+// 生成并下载Excel文件
+const generateExcelFile = (data) => {
+  // 创建工作簿
+  const wb = XLSX.utils.book_new()
+  
+  // 为每个数据类型创建工作表
+  Object.keys(data).forEach(sheetName => {
+    const worksheet = XLSX.utils.json_to_sheet(data[sheetName])
+    XLSX.utils.book_append_sheet(wb, worksheet, sheetName)
+  })
+  
+  // 生成包含当前日期的文件名
+  const fileName = `设备维修管理数据_${format(new Date(), 'yyyyMMddHHmmss')}.xlsx`
+  
+  // 导出Excel文件
+  XLSX.writeFile(wb, fileName, { bookType: 'xlsx' })
 }
 
 /* ---------------- 工具函数 ---------------- */
 const refreshData = () => fetchData()
-const formatTime  = t => new Date(t).toLocaleString('zh-CN')
-const exportReport = () => ElMessage.info('导出功能开发中')
+
+const formatTime = t => {
+  if (!t) return '-'
+  try {
+    if (typeof t === 'string' && t.includes(' ')) {
+      return t
+    }
+    return new Date(t).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  } catch (e) {
+    console.error("Invalid date format for display:", t, e)
+    return t
+  }
+}
+
+const formatTimeForInput = t => {
+  if (!t) return null
+  try {
+    if (typeof t === 'string' && t.includes(' ')) {
+      return t
+    }
+    const date = new Date(t)
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  } catch (e) {
+    console.error("Invalid date format for input:", t, e)
+    return t
+  }
+}
 
 onMounted(fetchData)
 </script>

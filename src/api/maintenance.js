@@ -2,27 +2,25 @@ import request from "./index"
 
 export const maintenanceAPI = {
   // 获取维护记录列表
-  getMaintenanceList(params) {
-    return request.get("/maintenance/list", { params })
-  },
+  getMaintenanceList: (params) => request.get("/maintenance/getMaintenanceList", { params }),
 
   // 创建维护记录
-  createMaintenance(maintenanceData) {
-    return request.post("/maintenance/create", maintenanceData)
-  },
+  createMaintenance: (data) => request.post("/maintenance/addMaintenance", data),
 
-  // 查询维护记录
-  selectMaintenance(maintenance_id) {
-    return request.post("/maintenance/select", { maintenance_id })
-  },
+  // 根据ID查询维护记录
+  selectMaintenanceById: (maintenance_id) =>
+    request.get("/maintenance/getMaintenanceById", { params: { maintenance_id } }),
 
   // 更新维护记录
-  updateMaintenance(maintenanceData) {
-    return request.post("/maintenance/update", maintenanceData)
-  },
+  updateMaintenance: (data) => request.put("/maintenance/updateMaintenance", data),
 
   // 删除维护记录
-  deleteMaintenance(maintenance_id) {
-    return request.delete("/maintenance/delete", { data: { maintenance_id } })
-  },
+  deleteMaintenance: (maintenance_id) =>
+    request.delete("/maintenance/deleteMaintenance", { params: { maintenance_id } }),
+
+  // 更新维护状态
+  updateMaintenanceStatus: (maintenance_id, status) =>
+    request.patch("/maintenance/updateMaintenanceStatus", null, {
+      params: { maintenance_id, status },
+    }),
 }

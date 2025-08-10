@@ -34,14 +34,14 @@
 
         <el-menu-item index="/control">
           <el-icon>
-            <Setting />
+            <Operation />
           </el-icon>
           <span>生产控制</span>
         </el-menu-item>
 
         <el-menu-item index="/maintenance">
           <el-icon>
-            <Tools />
+            <Setting />
           </el-icon>
           <span>维修管理</span>
         </el-menu-item>
@@ -51,6 +51,13 @@
             <Histogram />
           </el-icon>
           <span>生产看板</span>
+        </el-menu-item>
+
+        <el-menu-item index="/productionline">
+          <el-icon>
+            <Link />
+          </el-icon>
+          <span>产线管理</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -103,7 +110,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Setting, Odometer, Medal, DataAnalysis,
-  Expand, Fold, User, Tools, Histogram  // 使用确保存在的图标
+  Expand, Fold, User, Operation, Link  // 使用确保存在的图标
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'
 

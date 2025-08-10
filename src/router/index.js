@@ -43,6 +43,11 @@ const routes = [
         name: "Dashboard",
         component: () => import("../views/Dashboard.vue"),
       },
+      {
+        path: "/productionline",
+        name: "ProductionLine",
+        component: () => import("../views/ProductionLine.vue"),
+      },
     ],
   },
 ]

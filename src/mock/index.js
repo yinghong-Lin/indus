@@ -7,6 +7,7 @@ import "./modules/maintenance"
 import "./modules/monitoring"
 import "./modules/task"
 import "./modules/user"
+import "./modules/productionLine"
 
 
 // 设置Mock配置

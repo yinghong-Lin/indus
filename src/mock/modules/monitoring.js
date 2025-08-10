@@ -18,6 +18,7 @@ const generateRealtimeData = (equipment_type, equipment_id, equipment_name) => {
         realtime_holding_time: { value: Mock.Random.natural(3, 8), unit: "s" },
         realtime_injection_position: { value: Mock.Random.float(0.01, 0.1, 2, 2), unit: "mm" },
         realtime_screw_speed: { value: Mock.Random.natural(80, 200), unit: "rpm" },
+        realtime_material_level: { value: Mock.Random.natural(0, 100), unit: "%" },
       }
       break
     case "screen_printing":
@@ -26,7 +27,7 @@ const generateRealtimeData = (equipment_type, equipment_id, equipment_name) => {
         realtime_printing_speed: { value: Mock.Random.float(0.5, 1.0, 1, 1), unit: "m/s" },
         realtime_ink_viscosity: { value: Mock.Random.float(8, 14, 1, 1), unit: "Pa·s" },
         realtime_ink_drying_time: { value: Mock.Random.natural(20, 60), unit: "s" },
-        realtime_ink_level: { value: Mock.Random.natural(60, 120), unit: "%" },// 实时油墨液位
+        realtime_ink_level: { value: Mock.Random.natural(0, 100), unit: "%" },
       }
       break
     case "hot_stamping":
@@ -35,6 +36,7 @@ const generateRealtimeData = (equipment_type, equipment_id, equipment_name) => {
         realtime_stamping_pressure: { value: Mock.Random.float(0.5, 2.0, 1, 1), unit: "MPa" },
         realtime_stamping_time: { value: Mock.Random.float(0.3, 2.0, 1, 1), unit: "s" },
         realtime_foil_speed: { value: Mock.Random.float(1.5, 5.0, 1, 1), unit: "m/s" },
+        realtime_foil_level: { value: Mock.Random.natural(0, 100), unit: "%" },
       }
       break
     case "spray_painting":
@@ -45,10 +47,10 @@ const generateRealtimeData = (equipment_type, equipment_id, equipment_name) => {
         realtime_spray_speed: { value: Mock.Random.float(0.8, 1.3, 1, 1), unit: "m/s" },
         realtime_drying_temp: { value: Mock.Random.natural(50, 75), unit: "℃" },
         realtime_drying_time: { value: Mock.Random.natural(15, 40), unit: "s" },
+        realtime_paint_level: { value: Mock.Random.natural(0, 100), unit: "%" },
       }
       break
   }
-
   return {
     realtime_id: Mock.Random.guid(),
     realtime_status: {
@@ -124,8 +126,8 @@ const equipmentStatusTypes = {
   spray_painting: "喷漆机",
   screen_printing: "丝印机",
 }
-const equipmentStatuses = ["OFF", "ON_IDLE", "ON_RUNNING"]
 
+const equipmentStatuses = ["OFF", "ON_IDLE", "ON_RUNNING"]
 const allEquipmentStatusData = []
 for (const type in equipmentStatusTypes) {
   for (let i = 1; i <= Mock.Random.natural(3, 5); i++) {
@@ -139,13 +141,13 @@ for (const type in equipmentStatusTypes) {
   }
 }
 
-// Store real-time data for each equipment ID
+// 存储每个设备的实时数据
 const realtimeDataStore = {}
 allEquipmentStatusData.forEach((eq) => {
   realtimeDataStore[eq.equipment_id] = generateRealtimeData(eq.equipment_type, eq.equipment_id, eq.equipment_name)
 })
 
-// WebSocket 模拟
+// 模拟WebSocket数据更新
 setInterval(() => {
   allEquipmentStatusData.forEach((equipment) => {
     // 生成新的实时数据
@@ -156,13 +158,12 @@ setInterval(() => {
 }, 10000) // 每10秒更新一次数据，模拟实时推送
 
 // GET 获取设备最晚实时数据接口
-Mock.mock(/\/api\/productionMonitor\/getLastRealtimeData/, "get", ({ url }) => {
+Mock.mock(/\/productionMonitor\/getLastRealtimeData/, "get", ({ url }) => {
   const u = new URL("http://localhost" + url)
   const equipment_id = u.searchParams.get("equipment_id")
-
   const data = realtimeDataStore[equipment_id]
   if (data) {
-    // Update timestamp and collection_time to simulate real-time updates
+    // 更新时间戳，模拟实时更新
     data.timestamp = dayjs()
       .toISOString()
       .replace(/\.\d+Z$/, "")
@@ -184,15 +185,13 @@ Mock.mock(/\/api\/productionMonitor\/getLastRealtimeData/, "get", ({ url }) => {
 })
 
 // GET 获取报警记录列表接口
-Mock.mock(/\/api\/productionMonitor\/getAlarmList/, "get", ({ url }) => {
+Mock.mock(/\/productionMonitor\/getAlarmList/, "get", ({ url }) => {
   const u = new URL("http://localhost" + url)
   const page = Number(u.searchParams.get("page") || 1)
   const page_size = Number(u.searchParams.get("page_size") || 10)
-
   const start = (page - 1) * page_size
   const end = start + page_size
   const list = alarmData.slice(start, end)
-
   return {
     code: 200,
     msg: "获取报警记录列表成功",
@@ -209,11 +208,10 @@ Mock.mock(/\/api\/productionMonitor\/getAlarmList/, "get", ({ url }) => {
 })
 
 // GET 根据id获取报警记录信息接口
-Mock.mock(/\/api\/productionMonitor\/getAlarmById/, "get", ({ url }) => {
+Mock.mock(/\/productionMonitor\/getAlarmById/, "get", ({ url }) => {
   const u = new URL("http://localhost" + url)
   const alarm_id = u.searchParams.get("alarm_id")
   const alarm = alarmData.find((a) => a.alarm_id === alarm_id)
-
   if (alarm) {
     return {
       code: 200,
@@ -230,11 +228,10 @@ Mock.mock(/\/api\/productionMonitor\/getAlarmById/, "get", ({ url }) => {
 })
 
 // DEL 删除报警记录接口
-Mock.mock(/\/api\/productionMonitor\/deleteAlarm/, "delete", ({ url }) => {
+Mock.mock(/\/productionMonitor\/deleteAlarm/, "delete", ({ url }) => {
   const u = new URL("http://localhost" + url)
   const alarm_id = u.searchParams.get("alarm_id")
   const index = alarmData.findIndex((a) => a.alarm_id === alarm_id)
-
   if (index > -1) {
     alarmData.splice(index, 1)
     return {
@@ -252,13 +249,11 @@ Mock.mock(/\/api\/productionMonitor\/deleteAlarm/, "delete", ({ url }) => {
 })
 
 // PATCH 更新报警记录级别
-Mock.mock(/\/api\/productionMonitor\/updateAlarmLevel/, "patch", ({ url }) => {
+Mock.mock(/\/productionMonitor\/updateAlarmLevel/, "patch", ({ url }) => {
   const u = new URL("http://localhost" + url)
   const alarm_id = u.searchParams.get("alarm_id")
   const level = u.searchParams.get("level")
-
   const alarm = alarmData.find((a) => a.alarm_id === alarm_id)
-
   if (alarm) {
     alarm.alarm_level = level
     alarm.updated_at = dayjs()
@@ -279,13 +274,11 @@ Mock.mock(/\/api\/productionMonitor\/updateAlarmLevel/, "patch", ({ url }) => {
 })
 
 // PATCH 更新报警记录状态
-Mock.mock(/\/api\/productionMonitor\/updateAlarmStatus/, "patch", ({ url }) => {
+Mock.mock(/\/productionMonitor\/updateAlarmStatus/, "patch", ({ url }) => {
   const u = new URL("http://localhost" + url)
   const alarm_id = u.searchParams.get("alarm_id")
   const status = u.searchParams.get("status")
-
   const alarm = alarmData.find((a) => a.alarm_id === alarm_id)
-
   if (alarm) {
     alarm.alarm_status = status
     alarm.updated_at = dayjs()
@@ -306,19 +299,62 @@ Mock.mock(/\/api\/productionMonitor\/updateAlarmStatus/, "patch", ({ url }) => {
 })
 
 // GET 根据设备类型获取设备运行状况接口
-Mock.mock(/\/api\/productionMonitor\/getEquipmentStatusByType/, "get", ({ url }) => {
+Mock.mock(/\/productionMonitor\/getEquipmentStatusByType/, "get", ({ url }) => {
   const u = new URL("http://localhost" + url)
   const equipment_type = u.searchParams.get("equipment_type")
-
   let filteredData = [...allEquipmentStatusData]
   if (equipment_type !== "all") {
     filteredData = filteredData.filter((item) => item.equipment_type === equipment_type)
   }
-
   return {
     code: 200,
     msg: "获取成功",
     data: filteredData,
+  }
+})
+
+// POST 单个设备添料接口
+Mock.mock(/\/productionMonitor\/singleDeviceAddSubstance/, "post", ({ url }) => {
+  const u = new URL("http://localhost" + url)
+  const equipment_id = u.searchParams.get("equipment_id")
+  
+  // 查找设备
+  const equipment = allEquipmentStatusData.find(eq => eq.equipment_id === equipment_id)
+  if (!equipment) {
+    return {
+      code: 404,
+      msg: "设备不存在",
+      data: false
+    }
+  }
+  
+  // 更新设备物料水平（添料后增加到80-100%）
+  if (realtimeDataStore[equipment_id]) {
+    let levelKey = ""
+    switch (equipment.equipment_type) {
+      case "injection_molding":
+        levelKey = "realtime_material_level"
+        break
+      case "screen_printing":
+        levelKey = "realtime_ink_level"
+        break
+      case "hot_stamping":
+        levelKey = "realtime_foil_level"
+        break
+      case "spray_painting":
+        levelKey = "realtime_paint_level"
+        break
+    }
+    
+    if (levelKey && realtimeDataStore[equipment_id].realtime_details[levelKey]) {
+      realtimeDataStore[equipment_id].realtime_details[levelKey].value = Mock.Random.natural(80, 100)
+    }
+  }
+  
+  return {
+    code: 200,
+    msg: `已对设备'${equipment.equipment_name}'进行了添料操作`,
+    data: true
   }
 })
 

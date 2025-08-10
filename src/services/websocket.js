@@ -73,7 +73,7 @@ class WebSocketService {
   handleMessage(event, equipmentId) {
     try {
       const data = JSON.parse(event.data)
-      console.log(data)
+      // console.log(data)
       if (data.code === 200 && data.data) {
         // 确保数据包含 equipment_id，以便回调函数识别
         const realtimeData = { ...data.data, equipment_id: equipmentId }

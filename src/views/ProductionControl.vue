@@ -131,8 +131,8 @@
         <el-form-item v-if="equipmentForm.equipment_id" label="设备状态" prop="equipment_status">
           <el-select v-model="equipmentForm.equipment_status" placeholder="请选择设备状态" class="full-width">
             <el-option label="运行中" value="ON_RUNNING" />
-            <el-option label="空闲中" value="OFF" />
-            <el-option label="已停机" value="ON_IDLE" />
+            <el-option label="空闲中" value="ON_IDLE" />
+            <el-option label="已停机" value="OFF" />
           </el-select>
         </el-form-item>
 
@@ -176,8 +176,8 @@ const typeNameMap = {
 }
 const statusNameMap = {
   ON_RUNNING: '运行中',
-  OFF: '空闲中',
-  ON_IDLE: '已停机'
+  OFF: '已停机',
+  ON_IDLE: '空闲中'
 }
 
 // 响应式数据

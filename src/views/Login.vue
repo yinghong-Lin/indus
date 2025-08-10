@@ -54,17 +54,14 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '../stores/auth'
-import { userAPI } from '../api/user' 
 
 const router = useRouter()
 const authStore = useAuthStore()
 const loginFormRef = ref(null)
-
 const loginForm = reactive({
   user_name: '海绵宝宝',
   password: '123456'
 })
-
 const loginRules = {
   user_name: [
     { required: true, message: '请输入用户名', trigger: 'blur' }
@@ -77,30 +74,15 @@ const loginRules = {
 
 const handleLogin = async () => {
   if (!loginFormRef.value) return
-
   await loginFormRef.value.validate(async (valid) => {
     if (valid) {
-      try {
-        const response = await userAPI.login(loginForm) // ✅ Use userAPI.login
-        const user = response.data.user
-        const access_token = response.data.access_token
-        const refresh_token = response.data.refresh_token
-
-        // ✅ Manually set token and user info to authStore
-        authStore.user = user
-        authStore.access_token = access_token // Corrected spelling
-        authStore.refresh_token = refresh_token
-
-        localStorage.setItem('user', JSON.stringify(user)) // Store object needs to be stringified
-        localStorage.setItem('access_token', access_token)
-        localStorage.setItem('refresh_token', refresh_token)
-
-        console.log(access_token)
+      // 调用authStore的login方法，而非直接调用userAPI
+      const result = await authStore.login(loginForm)
+      if (result.success) {
         ElMessage.success('登录成功')
         router.push('/')
-      } catch (error) {
-        const message = error.response?.data?.message || '登录失败'
-        ElMessage.error(message)
+      } else {
+        ElMessage.error(result.message)
       }
     }
   })

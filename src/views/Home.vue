@@ -36,9 +36,9 @@
             </el-icon>
             开始生产
           </el-button>
-          <el-button type="warning" size="small" @click="pauseProduction" :disabled="!isProducing || loading">
+          <el-button type="danger" size="small" @click="stopAllProduction" :disabled="!isProducing && !isIdle || loading">
             <el-icon>
-              <VideoPause />
+              <Warning />
             </el-icon>
             暂停生产
           </el-button>
@@ -125,23 +125,45 @@
           </div>
         </div>
       </div>
-      <!-- 生产进度总览 -->
-      <div class="production-overview">
-        <div class="overview-item">
-          <div class="overview-label">任务编号</div>
-          <div class="overview-value">{{ currentTask.task_name || 'N/A' }}</div>
-        </div>
-        <div class="overview-item">
-          <div class="overview-label">产品</div>
-          <div class="overview-value">{{ currentTask.product_name || 'N/A' }}</div>
-        </div>
-        <div class="overview-item">
-          <div class="overview-label">进度</div>
-          <div class="overview-value">{{ (currentTask.production_progress * 100).toFixed(0) || 0 }}%</div>
-        </div>
-        <div class="overview-item">
-          <div class="overview-label">目标数量</div>
-          <div class="overview-value">{{ currentTask.production_quantity || 0 }}</div>
+      
+      <!-- 进行中的任务列表 -->
+      <div class="tasks-section">
+        <h3 class="tasks-title">进行中的生产任务</h3>
+        <el-table :data="inProgressTasks" stripe style="width: 100%">
+          <el-table-column prop="task_name" label="任务名称" min-width="200" />
+          <el-table-column prop="product_name" label="产品名称" min-width="150" />
+          <el-table-column prop="production_quantity" label="目标数量" width="120" />
+          <el-table-column prop="production_progress" label="进度" width="150">
+            <template #default="scope">
+              <div class="progress-container">
+                <el-progress 
+                  :percentage="scope.row.production_progress * 100" 
+                  stroke-width="6"
+                  :stroke-color="getProgressColor(scope.row.production_progress)"
+                />
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="task_priority" label="优先级" width="100">
+            <template #default="scope">
+              <el-tag :type="getPriorityTagType(scope.row.task_priority)">
+                {{ getPriorityName(scope.row.task_priority) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="start_time" label="开始时间" min-width="180">
+            <template #default="scope">
+              {{ formatDateTime(scope.row.start_time) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="end_time" label="预计结束时间" min-width="180">
+            <template #default="scope">
+              {{ formatDateTime(scope.row.end_time) }}
+            </template>
+          </el-table-column>
+        </el-table>
+        <div v-if="inProgressTasks.length === 0" class="no-tasks-message">
+          暂无进行中的生产任务
         </div>
       </div>
     </div>
@@ -170,21 +192,13 @@
             <span class="stat-label">停机中：</span>
             <span class="stat-value">{{ tooltipData.offCount }}</span>
           </div>
-          <!-- <div class="stat-item">
-            <span class="stat-label">故障:</span>
-            <span class="stat-value">{{ tooltipData.faultCount }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">维护中:</span>
-            <span class="stat-value">{{ tooltipData.maintainCount }}</span>
-          </div> -->
         </div>
       </div>
     </div>
 
     <!-- 工艺参数设置对话框 -->
     <el-dialog v-model="parameterDialogVisible"
-      :title="selectedProcessType ? getTypeName(selectedProcessType) + '' : ''" width="400px"
+      :title="selectedProcessType ? getTypeName(selectedProcessType) + '设备列表' : ''" width="400px"
       class="parameter-dialog">
       
       <!-- 对应设备类型的设备列表 -->
@@ -216,11 +230,12 @@
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Clock, Refresh, VideoPlay, VideoPause, Download, Tools, Warning } from '@element-plus/icons-vue'
+import { ElMessage, ElProgress } from 'element-plus'
+import { Clock, Refresh, VideoPlay, VideoPause, Download, Warning } from '@element-plus/icons-vue'
 import { homeAPI } from '../api/home'
+import dayjs from 'dayjs'
 
-// 中文映射
+// 中文映射（与文档设备类型完全匹配）
 const typeNameMap = {
   injection_molding: '注塑工艺',
   screen_printing: '丝印工艺',
@@ -228,18 +243,25 @@ const typeNameMap = {
   spray_painting: '喷漆工艺',
 }
 
+// 设备状态映射（与文档状态参数完全匹配）
 const statusNameMap = {
   OFF: '已停机',
   ON_IDLE: '空闲中',
   ON_RUNNING: '运行中',
-  // FAULT: '故障',
-  // MAINTAIN: '维护中'
+}
+
+// 优先级映射
+const priorityNameMap = {
+  1: '高',
+  2: '中',
+  3: '低'
 }
 
 // 响应式数据
 const loading = ref(false)
 const currentTime = ref('')
-const isProducing = ref(false)
+const isProducing = ref(false)  // 运行中状态
+const isIdle = ref(false)       // 空闲状态
 const parameterDialogVisible = ref(false)
 const selectedProcessType = ref(null)
 
@@ -251,72 +273,86 @@ const tooltipData = reactive({
   runningCount: 0,
   idleCount: 0,
   offCount: 0,
-  // faultCount: 0,
-  // maintainCount: 0,
 })
 
 // 从API获取的设备状态列表
 const equipmentStatusList = ref([])
-// 从API获取的进行中任务
-const currentTask = reactive({
-  task_id: '',
-  task_name: '',
-  product_name: '',
-  production_quantity: 0,
-  production_progress: 0,
-})
+// 从API获取的进行中任务列表
+const inProgressTasks = ref([])
 
-// 新增：用于存储点击设备类型后获取的该类型下的设备列表
+// 存储选中类型的设备列表
 const selectedTypeEquipmentList = ref([]);
 
-// 计算属性：设备状态统计（用于参数设置弹窗）
+// 计算属性：设备状态统计
 const statusSummary = computed(() => {
   const equipment = equipmentStatusList.value.filter(eq => eq.equipment_type === selectedProcessType.value);
   return {
     running: equipment.filter(e => e.equipment_status === 'ON_RUNNING').length,
-    // maintenance: equipment.filter(e => e.equipment_status === 'MAINTAIN').length,
-    // fault: equipment.filter(e => e.equipment_status === 'FAULT').length,
     off: equipment.filter(e => e.equipment_status === 'OFF').length,
     idle: equipment.filter(e => e.equipment_status === 'ON_IDLE').length,
   }
 })
 
-// 工具函数
+// 工具函数：类型名称转换
 const getTypeName = (type) => typeNameMap[type] || type
+// 状态名称转换
 const getStatusName = (status) => statusNameMap[status] || status
+// 状态标签样式
 const getStatusTagType = (status) => {
   const statusMap = {
-    ON_RUNNING: 'success',
-    OFF: 'info',
-    ON_IDLE: 'info',
-    // FAULT: 'danger',
-    // MAINTAIN: 'warning'
+    ON_RUNNING: 'success',  // 运行中-绿色
+    OFF: 'info',            // 停机-蓝色
+    ON_IDLE: 'warning'      // 空闲-黄色
   }
   return statusMap[status] || 'info'
 }
 
+// 优先级相关方法
+const getPriorityName = (priority) => priorityNameMap[priority] || '未知'
+const getPriorityTagType = (priority) => {
+  const priorityMap = {
+    1: 'danger',    // 高优先级-红色
+    2: 'warning',   // 中优先级-黄色
+    3: 'info'       // 低优先级-蓝色
+  }
+  return priorityMap[priority] || 'info'
+}
+
+// 进度条颜色
+const getProgressColor = (progress) => {
+  if (progress < 0.3) return '#60a5fa'
+  if (progress < 0.7) return '#36d399'
+  return '#10b981'
+}
+
+// 格式化日期时间
+const formatDateTime = (datetime) => {
+  if (!datetime) return 'N/A'
+  return dayjs(datetime).format('YYYY-MM-DD HH:mm:ss')
+}
+
+// 获取车间状态
 const getWorkshopStatus = (workshopType) => {
   const equipment = getEquipmentStatusByType(workshopType);
   if (equipment.length === 0) return 'stopped'; 
 
-  
-  // const hasFault = equipment.some(eq => eq.equipment_status === 'FAULT');
-  // const hasMaintain = equipment.some(eq => eq.equipment_status === 'MAINTAIN');
   const allRunning = equipment.every(eq => eq.equipment_status === 'ON_RUNNING');
-  const allStopped = equipment.every(eq => eq.equipment_status === 'OFF' || eq.equipment_status === 'ON_IDLE');
+  const allStopped = equipment.every(eq => eq.equipment_status === 'OFF');
+  const hasIdle = equipment.some(eq => eq.equipment_status === 'ON_IDLE');
 
-  // if (hasFault) return 'fault';
-  // if (hasMaintain) return 'maintenance';
   if (allRunning) return 'running';
   if (allStopped) return 'stopped';
+  if (hasIdle) return 'warning';
   return 'warning'; 
 }
 
+// 车间状态样式
 const getWorkshopStatusClass = (workshopType) => {
   const status = getWorkshopStatus(workshopType)
   return `status-${status}`
 }
 
+// 更新当前时间
 const updateTime = () => {
   const now = new Date()
   currentTime.value = now.toLocaleString('zh-CN', {
@@ -329,10 +365,12 @@ const updateTime = () => {
   })
 }
 
+// 根据类型筛选设备
 const getEquipmentStatusByType = (type) => {
   return equipmentStatusList.value.filter(eq => eq.equipment_type === type);
 }
 
+// 显示设备状态提示框
 const showTooltip = (workshopType, event) => {
   const equipment = getEquipmentStatusByType(workshopType);
   
@@ -340,16 +378,12 @@ const showTooltip = (workshopType, event) => {
   const runningCount = equipment.filter(eq => eq.equipment_status === 'ON_RUNNING').length;
   const idleCount = equipment.filter(eq => eq.equipment_status === 'ON_IDLE').length;
   const offCount = equipment.filter(eq => eq.equipment_status === 'OFF').length;
-  // const faultCount = equipment.filter(eq => eq.equipment_status === 'FAULT').length;
-  // const maintainCount = equipment.filter(eq => eq.equipment_status === 'MAINTAIN').length;
 
   Object.assign(tooltipData, {
     type: workshopType,
     totalCount,
     runningCount,
     idleCount,
-    // faultCount,
-    // maintainCount,
     offCount
   })
 
@@ -358,14 +392,16 @@ const showTooltip = (workshopType, event) => {
   tooltipVisible.value = true
 }
 
+// 隐藏提示框
 const hideTooltip = () => {
   tooltipVisible.value = false
 }
 
+// 显示工艺参数对话框
 const showProcessParameterDialog = async (processType) => {
   selectedProcessType.value = processType
   parameterDialogVisible.value = true
-  // Fetch equipment list for the selected type
+  // 调用文档中的GET接口获取指定类型设备
   try {
     const response = await homeAPI.getEquipmentNameAndStatusByType(processType);
     if (response.code === 200) {
@@ -381,18 +417,20 @@ const showProcessParameterDialog = async (processType) => {
   }
 }
 
+// 保存工艺参数
 const saveProcessParameters = () => {
-  // if (!selectedProcessType.value) return
-  // ElMessage.success(`${getTypeName(selectedProcessType.value)}参数设置成功，所有设备参数已更新`)
   parameterDialogVisible.value = false
 }
 
+// 获取设备状态（调用文档GET接口）
 const fetchEquipmentStatus = async () => {
   try {
     const response = await homeAPI.getEquipmentNameAndStatusByType('all');
     if (response.code === 200) {
       equipmentStatusList.value = response.data;
+      // 更新生产状态
       isProducing.value = equipmentStatusList.value.some(eq => eq.equipment_status === 'ON_RUNNING');
+      isIdle.value = equipmentStatusList.value.some(eq => eq.equipment_status === 'ON_IDLE');
     } else {
       ElMessage.error(response.msg || '获取设备状态失败');
     }
@@ -402,33 +440,23 @@ const fetchEquipmentStatus = async () => {
   }
 }
 
+// 获取进行中任务（调用文档GET接口）
 const fetchInProgressTask = async () => {
   try {
     const response = await homeAPI.getInProgressProductionTask();
-    if (response.code === 200 && response.data && response.data.length > 0) {
-      Object.assign(currentTask, response.data[0]); 
+    if (response.code === 200 && response.data) {
+      inProgressTasks.value = response.data;
     } else {
-      Object.assign(currentTask, {
-        task_id: '',
-        task_name: '暂无进行中任务',
-        product_name: 'N/A',
-        production_quantity: 0,
-        production_progress: 0,
-      });
+      inProgressTasks.value = [];
     }
   } catch (error) {
     console.error('获取进行中任务失败:', error);
     ElMessage.error('获取进行中任务失败');
-    Object.assign(currentTask, {
-      task_id: '',
-      task_name: '获取失败',
-      product_name: 'N/A',
-      production_quantity: 0,
-      production_progress: 0,
-    });
+    inProgressTasks.value = [];
   }
 }
 
+// 刷新数据
 const refreshData = async () => {
   loading.value = true;
   try {
@@ -441,13 +469,15 @@ const refreshData = async () => {
   }
 }
 
+// 开始生产（调用文档PATCH接口）
 const startProduction = async () => {
   loading.value = true;
   try {
     const response = await homeAPI.updateAllEquipmentStatus('ON_RUNNING');
     if (response.code === 200) {
       isProducing.value = true;
-      ElMessage.success('生产已开始');
+      isIdle.value = false;
+      ElMessage.success(response.msg || '生产已开始');
       await fetchEquipmentStatus(); 
     } else {
       ElMessage.error(response.msg || '启动生产失败');
@@ -460,25 +490,29 @@ const startProduction = async () => {
   }
 }
 
-const pauseProduction = async () => {
+
+// 暂停生产（调用文档PATCH接口）
+const stopAllProduction = async () => {
   loading.value = true;
   try {
-    const response = await homeAPI.updateAllEquipmentStatus('ON_IDLE');
+    const response = await homeAPI.updateAllEquipmentStatus('OFF');
     if (response.code === 200) {
       isProducing.value = false;
-      ElMessage.warning('生产已暂停');
+      isIdle.value = false;
+      ElMessage.error(response.msg || '全部设备已停机');
       await fetchEquipmentStatus(); 
     } else {
-      ElMessage.error(response.msg || '暂停生产失败');
+      ElMessage.error(response.msg || '停机操作失败');
     }
   } catch (error) {
-    console.error('暂停生产失败:', error);
-    ElMessage.error('暂停生产失败');
+    console.error('停机操作失败:', error);
+    ElMessage.error('停机操作失败');
   } finally {
     loading.value = false;
   }
 }
 
+// 显示导出对话框
 const showExportDialog = () => {
   ElMessage.info('导出报告功能开发中...');
 }
@@ -515,7 +549,6 @@ onUnmounted(() => {
 
 .status-box {
   flex: 1 1 120px;
-  /* 自适应宽度，最小 120px */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -548,7 +581,7 @@ onUnmounted(() => {
 
 .main-interface {
   padding: 20px;
-  background: #0a0a0a; /* Changed to match global background */
+  background: #0a0a0a;
   min-height: 100vh;
 }
 
@@ -690,7 +723,7 @@ onUnmounted(() => {
 }
 
 .equipment-image.status-maintenance {
-  border-color: #3b82f6; /* Blue for maintenance */
+  border-color: #3b82f6;
   box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
 }
 
@@ -778,7 +811,6 @@ onUnmounted(() => {
   0% {
     background-position: 0 0;
   }
-
   100% {
     background-position: 40px 0;
   }
@@ -808,7 +840,6 @@ onUnmounted(() => {
   0% {
     transform: translateX(-20px) translateY(-50%);
   }
-
   100% {
     transform: translateX(100px) translateY(-50%);
   }
@@ -821,29 +852,65 @@ onUnmounted(() => {
   border-radius: 50%;
 }
 
-.production-overview {
-  display: flex;
-  justify-content: space-around;
+/* 任务列表样式 */
+.tasks-section {
+  margin-top: 40px;
   background: rgba(38, 38, 38, 0.9);
   border-radius: 8px;
   padding: 20px;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.overview-item {
-  text-align: center;
-}
-
-.overview-label {
-  color: #9ca3af;
-  font-size: 12px;
-  margin-bottom: 5px;
-}
-
-.overview-value {
+.tasks-title {
   color: #ffffff;
   font-size: 18px;
-  font-weight: 600;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:deep(.el-table) {
+  background-color: transparent;
+  color: #ffffff;
+}
+
+:deep(.el-table th) {
+  background-color: rgba(50, 50, 50, 0.5);
+  color: #9ca3af;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+:deep(.el-table tr) {
+  background-color: transparent;
+}
+
+:deep(.el-table tr:nth-child(2n)) {
+  background-color: rgba(50, 50, 50, 0.2);
+}
+
+:deep(.el-table td) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-text {
+  min-width: 40px;
+  text-align: right;
+  color: #ffffff;
+}
+
+.no-tasks-message {
+  text-align: center;
+  color: #888;
+  padding: 40px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 10px;
 }
 
 /* 悬浮提示框 */

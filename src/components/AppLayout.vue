@@ -144,7 +144,12 @@ const breadcrumbs = computed(() => {
     '/': { name: '主页面', path: '/' },
     '/tasks': { name: '任务管理', path: '/tasks' },
     '/monitoring': { name: '生产监控', path: '/monitoring' },
-    '/control': { name: '生产控制', path: '/control' }
+    '/control': { name: '生产控制', path: '/control' },
+    '/maintenance': { name: '维修管理', path: '/maintenance' },
+    '/product': { name: '产品管理', path: '/product' },
+    '/warehouse': { name: '仓库管理', path: '/warehouse' },
+    '/dashboard': { name: '生产看板', path: '/dashboard' },
+    '/productionline': { name: '产线管理', path: '/productionline' },
   }
 
   const currentRoute = routeMap[route.path]

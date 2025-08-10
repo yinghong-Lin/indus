@@ -5,21 +5,19 @@
       <h1>生产监控</h1>
       <div class="header-actions">
         <el-button type="primary" @click="refreshData" :loading="loading">
-          <el-icon><Refresh /></el-icon> 刷新数据
+          <el-icon>
+            <Refresh />
+          </el-icon> 刷新数据
         </el-button>
       </div>
     </div>
-
     <!-- 工艺参数总览（每类一套） -->
     <div class="params-overview">
-      <el-card
-        class="param-card"
-        v-for="item in equipmentTypeSummaries"
-        :key="item.equipment_type"
-        :class="{ active: activeType === item.equipment_type }"
-        @click="activeType = item.equipment_type"
-      >
-        <template #header><h3>{{ getTypeName(item.equipment_type) }} - 设备概览</h3></template>
+      <el-card class="param-card" v-for="item in equipmentTypeSummaries" :key="item.equipment_type"
+        :class="{ active: activeType === item.equipment_type }" @click="activeType = item.equipment_type">
+        <template #header>
+          <h3>{{ getTypeName(item.equipment_type) }} - 设备概览</h3>
+        </template>
         <div class="param-row">
           <span>总设备数：</span><b>{{ item.total_count }}</b>
         </div>
@@ -27,37 +25,32 @@
           <span>运行中：</span><b>{{ item.running_count }}</b>
         </div>
         <div class="param-row">
-          <span>空闲：</span><b>{{ item.idle_count }}</b>
+          <span>空闲：</span><b>{{ item.off_count }}</b>
         </div>
         <div class="param-row">
-          <span>停机中：</span><b>{{ item.off_count }}</b>
+          <span>停机中：</span><b>{{ item.idle_count }}</b>
         </div>
       </el-card>
     </div>
-
     <!-- 设备信息与实时数据 -->
     <div class="realtime-section">
       <h2>设备信息与实时数据 - {{ getTypeName(activeType) }}</h2>
       <el-row :gutter="20">
-        <el-col
-          :xs="24"
-          :sm="12"
-          :lg="6"
-          v-for="dev in paginatedFilteredDevices"
-          :key="dev.equipment_id"
-        >
+        <el-col :xs="24" :sm="12" :lg="6" v-for="dev in paginatedFilteredDevices" :key="dev.equipment_id">
           <el-card class="realtime-card">
             <template #header>
-              <div style="display: flex; justify-content: space-between; width: 100%;">
+              <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
                 <h4>{{ dev.equipment_name }}</h4>
-                <el-tag :type="getStatusTagType(dev.equipment_status)">{{ getStatusName(dev.equipment_status) }}</el-tag>
-                <el-button
-                  size="small"
-                  style="margin-left: 10px;"
-                  @click.stop="toggleDataView(dev.equipment_id)"
-                >
-                  {{ displayStatus[dev.equipment_id] ? '查看详细参数' : '查看运行状态' }}
-                </el-button>
+                <el-tag :type="getStatusTagType(dev.equipment_status)">{{ getStatusName(dev.equipment_status)
+                  }}</el-tag>
+                <div>
+                  <el-button size="small" style="margin-left: 20px;" @click.stop="toggleDataView(dev.equipment_id)">
+                    {{ displayStatus[dev.equipment_id] ? '参数' : '状态' }}
+                  </el-button>
+                  <el-button size="small" type="success" style="margin-left: 20px;" @click.stop="addSubstance(dev)">
+                    添料
+                  </el-button>
+                </div>
               </div>
             </template>
             <div class="real-item">
@@ -107,18 +100,11 @@
         暂无 {{ getTypeName(activeType) }} 实时数据
       </div>
       <div class="pagination-wrapper" v-if="filteredDevices.length > 0">
-        <el-pagination
-          v-model:current-page="realtimePagination.page"
-          v-model:page-size="realtimePagination.page_size"
-          :page-sizes="[4, 8, 12]"
-          :total="filteredDevices.length"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleRealtimeSizeChange"
-          @current-change="handleRealtimeCurrentChange"
-        />
+        <el-pagination v-model:current-page="realtimePagination.page" v-model:page-size="realtimePagination.page_size"
+          :page-sizes="[4, 8, 12]" :total="filteredDevices.length" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleRealtimeSizeChange" @current-change="handleRealtimeCurrentChange" />
       </div>
     </div>
-
     <!-- 报警记录 -->
     <div class="alarm-section">
       <h2>报警记录</h2>
@@ -128,7 +114,7 @@
         </el-table-column>
         <el-table-column prop="equipment_name" label="设备名称" width="150" />
         <el-table-column prop="alarm_code" label="代码" width="150" />
-        <el-table-column prop="alarm_detail" label="详情" width="400"/>
+        <el-table-column prop="alarm_detail" label="详情" width="400" />
         <el-table-column prop="alarm_level" label="级别" width="100">
           <template #default="scope">
             <el-tag :type="alarmLevelTag(scope.row.alarm_level)">
@@ -145,38 +131,23 @@
         </el-table-column>
         <el-table-column label="操作" min-width="120">
           <template #default="scope">
-            <el-button
-              type="text"
-              size="small"
-              @click.stop="showUpdateLevelDialog(scope.row)"
-            >
+            <el-button type="text" size="small" @click.stop="showUpdateLevelDialog(scope.row)">
               更新级别
             </el-button>
-            <el-button
-              type="text"
-              size="small"
-              @click.stop="showUpdateStatusDialog(scope.row)"
-            >
+            <el-button type="text" size="small" @click.stop="showUpdateStatusDialog(scope.row)">
               更新状态
             </el-button>
           </template>
         </el-table-column>
       </el-table>
       <div class="pagination-wrapper">
-        <el-pagination
-          v-model:current-page="alarmPagination.page"
-          v-model:page-size="alarmPagination.page_size"
-          :page-sizes="[5, 10, 20]"
-          :total="alarmPagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="handleAlarmSizeChange"
-          @current-change="handleAlarmCurrentChange"
-        />
+        <el-pagination v-model:current-page="alarmPagination.page" v-model:page-size="alarmPagination.page_size"
+          :page-sizes="[5, 10, 20]" :total="alarmPagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleAlarmSizeChange" @current-change="handleAlarmCurrentChange" />
       </div>
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -197,13 +168,13 @@ const alarmPagination = ref({
   page_size: 10,
   total: 0,
 })
-const realtimePagination = ref({ // New pagination for realtime data
+const realtimePagination = ref({ // 实时数据分页
   page: 1,
-  page_size: 4, // Display 4 cards per page
+  page_size: 4, // 每页显示4个卡片
 })
-const displayStatus = ref({}) // Track which view to display for each device
+const displayStatus = ref({}) // 跟踪每个设备要显示的视图类型
 
-// 中文映射
+/* ---------- 中文映射 ---------- */
 const typeNameMap = {
   injection_molding: '注塑机',
   screen_printing: '丝印机',
@@ -211,12 +182,11 @@ const typeNameMap = {
   spray_painting: '喷漆机',
   all: '全部设备'
 }
+
 const statusNameMap = {
-  OFF: '已停机',
-  ON_IDLE: '空闲中',
+  OFF: '空闲中',
+  ON_IDLE: '已停机',
   ON_RUNNING: '运行中',
-  // FAULT: '故障',
-  // MAINTAIN: '维护中'
 }
 
 /* ---------- 计算属性 ---------- */
@@ -231,8 +201,6 @@ const equipmentTypeSummaries = computed(() => {
         running_count: 0,
         off_count: 0,
         idle_count: 0,
-        // fault_count: 0,
-        // maintain_count: 0,
       }
     }
     typesMap[type].total_count++
@@ -243,24 +211,19 @@ const equipmentTypeSummaries = computed(() => {
     } else if (eq.equipment_status === 'ON_IDLE') {
       typesMap[type].idle_count++
     }
-    //  else if (eq.equipment_status === 'FAULT') {
-    //   typesMap[type].fault_count++;
-    // } else if (eq.equipment_status === 'MAINTAIN') {
-    //   typesMap[type].maintain_count++;
-    // }
   })
   return Object.values(typesMap)
 })
 
 const filteredDevices = computed(() => {
-  // Combine equipment overview information and real-time detailed data
+  // 合并设备概览信息和实时详细数据
   return allEquipmentStatus.value
     .filter(eq => eq.equipment_type === activeType.value)
     .map(eq => {
       const realtimeData = allRealtimeDetails.value.find(rt => rt.equipment_id === eq.equipment_id)
       return {
         ...eq,
-        ...realtimeData, // Merge real-time data
+        ...realtimeData, // 合并实时数据
         realtime_details: realtimeData?.realtime_details || {},
         realtime_status: realtimeData?.realtime_status || {},
         collection_time: realtimeData?.collection_time || null,
@@ -284,11 +247,10 @@ const getStatusTagType = (status) => {
     ON_RUNNING: 'success',
     OFF: 'info',
     ON_IDLE: 'info',
-    // FAULT: 'danger',
-    // MAINTAIN: 'warning'
   }
   return statusMap[status] || 'info'
 }
+
 const alarmLevelTag = l => ({ '警告': 'warning', '严重': 'danger', '致命': 'danger' }[l] || 'info')
 const alarmStatusTag = s => ({ '已处理': 'success', '未处理': 'danger' }[s] || 'info')
 
@@ -305,13 +267,14 @@ const formatTime = t => {
 const getRealtimeDetailsDisplay = (dev) => {
   const details = []
   if (!dev || !dev.realtime_details) return details
-
+  
   switch (dev.equipment_type) {
     case 'hot_stamping':
       if (dev.realtime_details.realtime_stamping_temp) details.push({ label: '烫金温度', value: `${dev.realtime_details.realtime_stamping_temp.value}${dev.realtime_details.realtime_stamping_temp.unit}` })
       if (dev.realtime_details.realtime_stamping_pressure) details.push({ label: '烫金压力', value: `${dev.realtime_details.realtime_stamping_pressure.value}${dev.realtime_details.realtime_stamping_pressure.unit}` })
       if (dev.realtime_details.realtime_stamping_time) details.push({ label: '烫金时间', value: `${dev.realtime_details.realtime_stamping_time.value}${dev.realtime_details.realtime_stamping_time.unit}` })
       if (dev.realtime_details.realtime_foil_speed) details.push({ label: '金箔速度', value: `${dev.realtime_details.realtime_foil_speed.value}${dev.realtime_details.realtime_foil_speed.unit}` })
+      if (dev.realtime_details.realtime_foil_level) details.push({ label: '金箔余量', value: `${dev.realtime_details.realtime_foil_level.value}${dev.realtime_details.realtime_foil_level.unit}` })
       break
     case 'injection_molding':
       if (dev.realtime_details.realtime_heating_temp) details.push({ label: '加热温度', value: `${dev.realtime_details.realtime_heating_temp.value}${dev.realtime_details.realtime_heating_temp.unit}` })
@@ -325,6 +288,7 @@ const getRealtimeDetailsDisplay = (dev) => {
       if (dev.realtime_details.realtime_holding_time) details.push({ label: '保压时间', value: `${dev.realtime_details.realtime_holding_time.value}${dev.realtime_details.realtime_holding_time.unit}` })
       if (dev.realtime_details.realtime_injection_position) details.push({ label: '注射位置', value: `${dev.realtime_details.realtime_injection_position.value}${dev.realtime_details.realtime_injection_position.unit}` })
       if (dev.realtime_details.realtime_screw_speed) details.push({ label: '螺杆转速', value: `${dev.realtime_details.realtime_screw_speed.value}${dev.realtime_details.realtime_screw_speed.unit}` })
+      if (dev.realtime_details.realtime_material_level) details.push({ label: '物料水平', value: `${dev.realtime_details.realtime_material_level.value}${dev.realtime_details.realtime_material_level.unit}` })
       break
     case 'screen_printing':
       if (dev.realtime_details.realtime_printing_pressure) details.push({ label: '印刷压力', value: `${dev.realtime_details.realtime_printing_pressure.value}${dev.realtime_details.realtime_printing_pressure.unit}` })
@@ -334,12 +298,13 @@ const getRealtimeDetailsDisplay = (dev) => {
       if (dev.realtime_details.realtime_ink_level) details.push({ label: '油墨液位', value: `${dev.realtime_details.realtime_ink_level.value}${dev.realtime_details.realtime_ink_level.unit}` })
       break
     case 'spray_painting':
+      if (dev.realtime_details.realtime_paint_viscosity) details.push({ label: '油漆粘度', value: `${dev.realtime_details.realtime_paint_viscosity.value}${dev.realtime_details.realtime_paint_viscosity.unit}` })
       if (dev.realtime_details.realtime_spray_pressure) details.push({ label: '喷漆压力', value: `${dev.realtime_details.realtime_spray_pressure.value}${dev.realtime_details.realtime_spray_pressure.unit}` })
       if (dev.realtime_details.realtime_spray_distance) details.push({ label: '喷漆距离', value: `${dev.realtime_details.realtime_spray_distance.value}${dev.realtime_details.realtime_spray_distance.unit}` })
       if (dev.realtime_details.realtime_spray_speed) details.push({ label: '喷漆速度', value: `${dev.realtime_details.realtime_spray_speed.value}${dev.realtime_details.realtime_spray_speed.unit}` })
       if (dev.realtime_details.realtime_drying_temp) details.push({ label: '干燥温度', value: `${dev.realtime_details.realtime_drying_temp.value}${dev.realtime_details.realtime_drying_temp.unit}` })
       if (dev.realtime_details.realtime_drying_time) details.push({ label: '干燥时间', value: `${dev.realtime_details.realtime_drying_time.value}${dev.realtime_details.realtime_drying_time.unit}` })
-      if (dev.realtime_details.realtime_paint_viscosity) details.push({ label: '油漆粘度', value: `${dev.realtime_details.realtime_paint_viscosity.value}${dev.realtime_details.realtime_paint_viscosity.unit}` })
+      if (dev.realtime_details.realtime_paint_level) details.push({ label: '油漆液位', value: `${dev.realtime_details.realtime_paint_level.value}${dev.realtime_details.realtime_paint_level.unit}` })
       break
   }
   return details
@@ -349,11 +314,9 @@ const getRealtimeDetailsDisplay = (dev) => {
 const fetchEquipmentStatusOverview = async () => {
   try {
     const response = await monitoringAPI.getEquipmentStatusByType('all')
-    console.log(response)
     if (response.code === 200) {
       allEquipmentStatus.value = response.data || []
-      console.log(allEquipmentStatus.value)
-      // Ensure default selected type is in the list, if list is empty, don't set
+      // 确保默认选中的类型在列表中，如果列表为空则不设置
       if (allEquipmentStatus.value.length > 0 && !equipmentTypeSummaries.value.some(item => item.equipment_type === activeType.value)) {
         activeType.value = equipmentTypeSummaries.value[0].equipment_type
       } else if (allEquipmentStatus.value.length === 0) {
@@ -369,13 +332,14 @@ const fetchEquipmentStatusOverview = async () => {
 }
 
 const fetchAllRealtimeDataForActiveType = async () => {
-  // Reset realtime pagination when active type changes
+  // 当活跃类型改变时重置实时数据分页
   realtimePagination.value.page = 1
   const equipmentIdsToFetch = allEquipmentStatus.value
     .filter(eq => eq.equipment_type === activeType.value)
     .map(eq => eq.equipment_id)
-
+  
   const realtimePromises = equipmentIdsToFetch.map(id => monitoringAPI.getLastRealtimeData(id))
+  
   try {
     const responses = await Promise.all(realtimePromises)
     allRealtimeDetails.value = responses
@@ -405,6 +369,34 @@ const fetchAlarms = async () => {
   }
 }
 
+// 添料操作
+const addSubstance = async (device) => {
+  try {
+    loading.value = true
+    const response = await monitoringAPI.addSubstanceToDevice(device.equipment_id)
+    if (response.code === 200) {
+      ElMessage.success(response.msg || `已对设备'${device.equipment_name}'进行了添料操作`)
+      // 添料后刷新该设备的实时数据
+      const updatedData = await monitoringAPI.getLastRealtimeData(device.equipment_id)
+      if (updatedData.code === 200 && updatedData.data) {
+        const index = allRealtimeDetails.value.findIndex(item => item.equipment_id === device.equipment_id)
+        if (index !== -1) {
+          allRealtimeDetails.value[index] = updatedData.data
+        } else {
+          allRealtimeDetails.value.push(updatedData.data)
+        }
+      }
+    } else {
+      ElMessage.error(response.msg || '添料操作失败')
+    }
+  } catch (error) {
+    console.error('添料操作失败:', error)
+    ElMessage.error('添料操作失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 /* ---------- WebSocket 相关 ---------- */
 const updateRealtimeData = (realtimeData) => {
   const equipmentIndex = allRealtimeDetails.value.findIndex(
@@ -412,11 +404,8 @@ const updateRealtimeData = (realtimeData) => {
   )
   if (equipmentIndex !== -1) {
     // 更新现有设备数据
-    // 使用展开运算符确保响应式更新
     allRealtimeDetails.value[equipmentIndex] = { ...allRealtimeDetails.value[equipmentIndex], ...realtimeData };
   } else {
-    // 如果收到了一个不在当前 allRealtimeDetails 中的设备数据，可以考虑添加
-    // 但通常情况下，allRealtimeDetails 应该通过 HTTP 请求预先填充
     console.warn(`收到未知设备ID的实时数据: ${realtimeData.equipment_id}。已添加。`);
     allRealtimeDetails.value.push(realtimeData);
   }
@@ -425,15 +414,12 @@ const updateRealtimeData = (realtimeData) => {
 const setupWebSocketConnections = () => {
   // 停止所有之前的 WebSocket 连接
   websocketService.stopAllMonitoring();
-
+  
   // 获取当前活跃设备类型下的所有设备ID
   const equipmentIdsToMonitor = allEquipmentStatus.value
     .filter(eq => eq.equipment_type === activeType.value)
     .map(eq => eq.equipment_id);
-  console.log(allEquipmentStatus.value)
-  console.log(equipmentIdsToMonitor)
-
-
+  
   if (equipmentIdsToMonitor.length > 0) {
     websocketService.startMonitoring(equipmentIdsToMonitor, updateRealtimeData);
   } else {
@@ -460,7 +446,6 @@ const refreshData = async () => {
   }
 }
 
-
 const showUpdateLevelDialog = async (alarm) => {
   const { value: level } = await ElMessageBox.prompt(
     '请输入新的报警级别',
@@ -469,20 +454,17 @@ const showUpdateLevelDialog = async (alarm) => {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       inputValue: alarm.alarm_level,
-      // 添加一个提示信息
       message: '提示：级别必须是 严重、警告 或 致命',
-      // 禁用输入验证，因为我们已经提供了提示信息
       inputPattern: null,
     }
   ).catch(() => false);
-
+  
   if (level) {
-    // 手动验证输入
     if (!['严重', '警告', '致命'].includes(level)) {
       ElMessage.error('级别必须是 严重、警告 或 致命');
       return;
     }
-
+    
     try {
       const res = await monitoringAPI.updateAlarmLevel(alarm.alarm_id, level);
       if (res.code === 200) {
@@ -506,20 +488,17 @@ const showUpdateStatusDialog = async (alarm) => {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       inputValue: alarm.alarm_status,
-      // 添加一个提示信息
       message: '提示：状态必须是 已处理 或 未处理',
-      // 禁用输入验证，因为我们已经提供了提示信息
       inputPattern: null,
     }
   ).catch(() => false);
-
+  
   if (status) {
-    // 手动验证输入
     if (!['已处理', '未处理'].includes(status)) {
       ElMessage.error('状态必须是 已处理 或 未处理');
       return;
     }
-
+    
     try {
       const res = await monitoringAPI.updateAlarmStatus(alarm.alarm_id, status);
       if (res.code === 200) {
@@ -540,14 +519,17 @@ const handleAlarmSizeChange = (val) => {
   alarmPagination.value.page_size = val
   fetchAlarms()
 }
+
 const handleAlarmCurrentChange = (val) => {
   alarmPagination.value.page = val
   fetchAlarms()
 }
+
 const handleRealtimeSizeChange = (val) => {
   realtimePagination.value.page_size = val
-  realtimePagination.value.page = 1 // Reset to first page when page size changes
+  realtimePagination.value.page = 1 // 改变页大小时重置到第一页
 }
+
 const handleRealtimeCurrentChange = (val) => {
   realtimePagination.value.page = val
 }
@@ -556,9 +538,9 @@ const handleRealtimeCurrentChange = (val) => {
 let realtimeDataInterval = null
 const authStore = useAuthStore()
 
-// WebSocket message handler
+// WebSocket 消息处理
 const handleWebSocketMessage = (realtimeData) => {
-  // Update the specific equipment's realtime data in allRealtimeDetails
+  // 更新特定设备的实时数据
   const index = allRealtimeDetails.value.findIndex(
     (item) => item.equipment_id === realtimeData.equipment_id
   )
@@ -571,18 +553,18 @@ const handleWebSocketMessage = (realtimeData) => {
 
 onMounted(async () => {
   await refreshData()
-
-  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 10000000000)
-
+  // 设置定时刷新实时数据
+  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 60000) // 每60秒刷新一次
+  
   if (authStore.isAuthenticated) {
-    // Start monitoring the WebSocket connections when the component mounts
+    // 组件挂载时启动WebSocket监控
     websocketService.startMonitoring(
       allEquipmentStatus.value.map(eq => eq.equipment_id),
       handleWebSocketMessage
     )
   }
-
-  // Watch for changes in equipment status to update WebSocket connections
+  
+  // 监听设备状态变化以更新WebSocket连接
   watch(allEquipmentStatus, (newStatus, oldStatus) => {
     if (newStatus !== oldStatus && authStore.isAuthenticated) {
       websocketService.startMonitoring(
@@ -597,14 +579,15 @@ onUnmounted(() => {
   if (realtimeDataInterval) {
     clearInterval(realtimeDataInterval)
   }
-  // Stop all WebSocket connections when component is unmounted
+  // 组件卸载时停止所有WebSocket连接
   websocketService.stopAllMonitoring()
 })
 
-// Watch for activeType changes to refetch realtime data for the new type
+// 监听活跃类型变化以重新获取对应类型的实时数据
 watch(activeType, (newType, oldType) => {
   if (newType !== oldType) {
     fetchAllRealtimeDataForActiveType()
+    setupWebSocketConnections()
   }
 })
 
@@ -613,7 +596,6 @@ const toggleDataView = (equipmentId) => {
   displayStatus.value[equipmentId] = !displayStatus.value[equipmentId]
 }
 </script>
-
 <style scoped>
 .production-monitoring {
   padding: 20px;
@@ -758,7 +740,7 @@ const toggleDataView = (equipmentId) => {
   margin-top: 20px;
 }
 
-/* Element Plus Table Customization */
+/* Element Plus 表格样式自定义 */
 :deep(.el-table) {
   background: transparent;
   color: #ffffff;
@@ -783,6 +765,7 @@ const toggleDataView = (equipmentId) => {
   background: rgba(255, 255, 255, 0.05);
 }
 
+/* 分页样式自定义 */
 :deep(.el-pagination) {
   color: #ffffff;
 }
@@ -813,23 +796,24 @@ const toggleDataView = (equipmentId) => {
   border-color: #409EFF !important;
 }
 
+/* 响应式样式 */
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
   }
-
+  
   .header-actions {
     width: 100%;
     display: flex;
     justify-content: flex-end;
   }
-
+  
   .params-overview {
     grid-template-columns: 1fr;
   }
-
+  
   .realtime-section .el-col {
     flex: 0 0 100%;
     max-width: 100%;

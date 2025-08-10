@@ -67,21 +67,14 @@ const router = createRouter({
   routes,
 })
 
-// 全局前置守卫
+// 全局前置守卫：检测token是否存在
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-
-  // 目标路由不需要登录
-  if (to.meta.requiresAuth === false) {
-    next()
-    return
-  }
-
-  // 需要登录但未登录
-  if (!authStore.isAuthenticated) {
-    next("/login")
+  // 目标路由需要登录，但未登录（token不存在）
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next("/login") // 跳转登录页
   } else {
-    next()
+    next() // 正常访问
   }
 })
 

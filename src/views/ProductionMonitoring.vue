@@ -573,7 +573,7 @@ onMounted(async () => {
   await refreshData()
 
   // Set up interval for fetching realtime data for the active type
-  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 3000) // Fetch every 5 seconds
+  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 1000) // Fetch every 5 seconds
 
   // Initialize WebSocket connection and set up message handler
   if (authStore.isAuthenticated) {

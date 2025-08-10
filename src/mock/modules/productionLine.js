@@ -46,31 +46,6 @@ const productionLines = [
   }
 ]
 
-// 获取设备列表接口
-Mock.mock(/\/api\/productionControl\/getEquipmentList/, "get", ({ url }) => {
-  const u = new URL("http://localhost" + url)
-  const page = Number(u.searchParams.get("page") || 1)
-  const page_size = Number(u.searchParams.get("page_size") || 10)
-
-  const start = (page - 1) * page_size
-  const end = start + page_size
-  const list = equipmentData.slice(start, end)
-
-  return {
-    code: 200,
-    msg: "获取设备列表成功",
-    data: {
-      equipments: list,
-      pagination: {
-        total: equipmentData.length,
-        page,
-        page_size,
-        total_pages: Math.ceil(equipmentData.length / page_size)
-      }
-    }
-  }
-})
-
 // 获取产线列表
 Mock.mock(/\/api\/productionLine\/getProductLineList/, "get", ({ url }) => {
   const u = new URL("http://localhost" + url)

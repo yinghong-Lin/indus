@@ -38,6 +38,16 @@ const routes = [
         name: "MaintenancePage",
         component: () => import("../views/MaintenancePage.vue"),
       },
+       {
+        path: "/product",
+        name: "ProductManagement",
+        component: () => import("../views/ProductManagement.vue"),
+      },
+      {
+        path: "/warehouse",
+        name: "WarehouseManagement",
+        component: () => import("../views/WarehouseManagement.vue"),
+      },
       {
         path: "/dashboard",
         name: "Dashboard",

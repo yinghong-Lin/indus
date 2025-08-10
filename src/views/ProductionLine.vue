@@ -275,7 +275,7 @@ const formatDateTime = (dt) => {
 // 获取设备选项
 const fetchEquipmentOptions = async () => {
     try {
-        const res = await equipmentAPI.getEquipmentList({ page: 1, page_size: 1000 })
+        const res = await equipmentAPI.getEquipmentList({ page: 1, page_size: 10 })
         if (res.code === 200) {
             equipmentOptions.value = res.data.equipments
         }

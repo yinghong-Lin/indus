@@ -46,6 +46,20 @@
           <span>维修管理</span>
         </el-menu-item>
 
+         <el-menu-item index="/product">
+          <el-icon>
+            <ShoppingCart />
+          </el-icon>
+          <span>产品管理</span>
+        </el-menu-item>
+
+        <el-menu-item index="/warehouse">
+          <el-icon>
+            <Box />
+          </el-icon>
+          <span>仓库管理</span>
+        </el-menu-item>
+
         <el-menu-item index="/dashboard">
           <el-icon>
             <Histogram />
@@ -109,7 +123,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Setting, Odometer, Medal, DataAnalysis,
+  Setting, Odometer, Medal, DataAnalysis,ShoppingCart,Box,Tools,
   Expand, Fold, User, Operation, Link  // 使用确保存在的图标
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '../stores/auth'

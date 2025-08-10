@@ -572,10 +572,8 @@ const handleWebSocketMessage = (realtimeData) => {
 onMounted(async () => {
   await refreshData()
 
-  // Set up interval for fetching realtime data for the active type
-  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 1000) // Fetch every 5 seconds
+  realtimeDataInterval = setInterval(fetchAllRealtimeDataForActiveType, 10000000000)
 
-  // Initialize WebSocket connection and set up message handler
   if (authStore.isAuthenticated) {
     // Start monitoring the WebSocket connections when the component mounts
     websocketService.startMonitoring(
